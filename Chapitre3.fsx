@@ -246,7 +246,7 @@ and Expression =
     | PlusPetitQue of Expression * Expression
     | PlusGrandQue of Expression * Expression
 
-let programme = 
+let programme =
     Si (
         PlusGrandQue ((Integer 3), (Integer 1)),
         Affiche "3 plus grand que 1",
@@ -259,10 +259,10 @@ type ArbreBinaire =
     | Noeud of int * ArbreBinaire * ArbreBinaire
     | Vide
 
-// fonction pour traverser notre arbre : récursion et filtrage par motif 
+// fonction pour traverser notre arbre : récursion et filtrage par motif
 
 let rec traverse (arbre:ArbreBinaire) =
-    match arbre with 
+    match arbre with
     | Vide -> ()
     | Noeud (valeur, gauche, droit) ->
         traverse gauche
@@ -299,7 +299,7 @@ let rec organisation salaries =
     match salaries with
     | Salarie nom -> printfn "%s (Employé)" nom
     | Manager (nom,[]) -> failwith "Impossible d'avoir un manager sans subalterne !"
-    | Manager (nom, salaries) -> 
+    | Manager (nom, salaries) ->
         printfn "Le manager %s a sous son ordre : " nom
         salaries |> List.iter organisation
 
@@ -362,7 +362,7 @@ let prochaineAnnee = {cetteAnnee with Annee=2017}
 let FSharpCars = function
                  | {Constructeur = "FSharp"} -> true
                  | _                   -> false
-                                                                         
+
 // Records : inférence de type
 type Point = { X: float; Y: float}
 type Vecteur3 = {X: float; Y: float; Z: float}
@@ -376,9 +376,67 @@ let distance (p1:Point) (p2:Point) =
 let p:Point = { X=1.0; Y=2.0}
 let origine:Point = {X=0.0; Y=0.0}
 
-// Records : Ajout d'une méthode 
-type Vecteur  = {X: float; Y: float; Z: float} 
-                member this.Length = 
+// Records : Ajout d'une méthode
+type Vecteur  = {X: float; Y: float; Z: float}
+                member this.Length =
                             sqrt <| this.X**2.0 + this.Y**2.0 + this.Z**2.00
 let v = {X=1.0; Y=2.0; Z=3.0}
 v.Length
+
+// Evaluations paresseuses
+
+let x = Lazy<int>.Create(fun () -> printfn "Evaluation de x..." ; 10)
+// autre façon de procéder : let x = lazy (printfn "Evaluation de x ..."; 10)
+let y = Lazy<int>.Create(fun () -> printfn "Evaluation de y..."; x.Value*2)
+// Autre façon de procéder : let y = lazy (printfn "Evaluation de y... "; x.Value * 2)
+y.Value
+
+// SEQUENCES :
+let seqEntiers = seq { for i in 1 .. System.Int32.MaxValue -> i}
+seqEntiers |> Seq.take 5 |> Seq.iter (printfn "%d")
+
+// Expressions de séquences
+let alphabetVerbeux = 
+    seq {
+            for caractere in 'A' .. 'Z' do
+                printfn "Production de la lettre %c" caractere
+                yield caractere
+        }
+
+// Seq.nth est déprécié depuis F#4.0 : on utilisera donc Seq.item
+let cinquiemeLettre = Seq.item 5 alphabetVerbeux
+
+//utilisation du YIELD BANG :
+let rec tousLesFichiers chemin = 
+    seq {
+            yield! Directory.GetFiles chemin
+            for repertoire in Directory.GetDirectories(chemin) do
+                yield! tousLesFichiers repertoire
+        }
+// Seq.take
+let seqAleatoire = seq {
+        let alea = new Random()
+        while true do
+            yield alea.Next()
+    }
+
+seqAleatoire |> Seq.take 3
+
+// Seq.unfold : séquence et suite de Fibonacci
+let generateurValeurs (a, b) =
+    // quand la somme de a et b atteint 100 alors retourne None
+    // nécessaire à l'arrêt de la fonction unfold
+    if a + b > 100 then None
+    else 
+        let valeurSuivante = a+b
+        Some (valeurSuivante, (valeurSuivante, a))
+
+Seq.unfold generateurValeurs (0,1) |> Seq.toList
+
+// exemple l'opération d'agrégat sur une séquence avec Seq.map
+
+let phrase = "Je suis obligé de taper cette phrase inepte mais qui se \
+doit d'être longue mais alors très longue à n'en plus finir".Split([|' '|])
+
+phrase |> Seq.map (fun mot -> (mot, String.length mot))
+
