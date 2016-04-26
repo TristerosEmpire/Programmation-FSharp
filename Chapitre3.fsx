@@ -330,7 +330,7 @@ type JeuComplet2 =
 let carte = As Pique
 let valeurCarte = carte.Value
 
-// Records / Enregistrements
+// RECORDS / Enregistrements
 type PersonneRec = {
     Nom : string;
     Prenom : string;
@@ -396,7 +396,7 @@ let seqEntiers = seq { for i in 1 .. System.Int32.MaxValue -> i}
 seqEntiers |> Seq.take 5 |> Seq.iter (printfn "%d")
 
 // Expressions de séquences
-let alphabetVerbeux = 
+let alphabetVerbeux =
     seq {
             for caractere in 'A' .. 'Z' do
                 printfn "Production de la lettre %c" caractere
@@ -407,7 +407,7 @@ let alphabetVerbeux =
 let cinquiemeLettre = Seq.item 5 alphabetVerbeux
 
 //utilisation du YIELD BANG :
-let rec tousLesFichiers chemin = 
+let rec tousLesFichiers chemin =
     seq {
             yield! Directory.GetFiles chemin
             for repertoire in Directory.GetDirectories(chemin) do
@@ -427,7 +427,7 @@ let generateurValeurs (a, b) =
     // quand la somme de a et b atteint 100 alors retourne None
     // nécessaire à l'arrêt de la fonction unfold
     if a + b > 100 then None
-    else 
+    else
         let valeurSuivante = a+b
         Some (valeurSuivante, (valeurSuivante, a))
 
@@ -440,3 +440,52 @@ doit d'être longue mais alors très longue à n'en plus finir".Split([|' '|])
 
 phrase |> Seq.map (fun mot -> (mot, String.length mot))
 
+// REQUETES
+// 1er code utilisant les pipes et les séquences
+type Client = {Etat: string; CodePostal: int}
+
+let listeCompleteClients = [
+            {Etat="Californie"; CodePostal=55523};
+            {Etat="New-York"; CodePostal=33324};
+            {Etat="Washington"; CodePostal=23412};
+            {Etat="Californie"; CodePostal=12345}
+]
+
+let clientsSelonEtat nomEtat =
+    listeCompleteClients
+    |> Seq.filter (fun client -> client.Etat = nomEtat)
+    |> Seq.map (fun client -> client.CodePostal)
+    |> Seq.distinct
+
+clientsSelonEtat "Californie"
+
+let clientsSelonEtat2 nomEtat=
+    query {
+        for client in listeCompleteClients do
+            where (client.Etat = nomEtat)
+            select client.CodePostal
+            distinct
+            }
+
+clientsSelonEtat "Californie"
+
+// Expressions de requête
+open System.Diagnostics
+
+let compteProcActifs = 
+    query {
+        for procActif in Process.GetProcesses () do
+            count
+            }
+
+let consoMemoire =
+    query {
+        for procActif in Process.GetProcesses () do
+            sortByDescending procActif.WorkingSet64
+            head
+            }
+
+// sous Linux consoMemoire.MainWindowTitle -> null donc nous utiliserons le nom du processus
+printfn "'%s' utilise un espace de travail de : \n%d octets" 
+        consoMemoire.ProcessName 
+        consoMemoire.WorkingSet64
