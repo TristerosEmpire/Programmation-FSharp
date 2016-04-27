@@ -485,7 +485,63 @@ let consoMemoire =
             head
             }
 
-// sous Linux consoMemoire.MainWindowTitle -> null donc nous utiliserons le nom du processus
+// sous xubuntu consoMemoire.MainWindowTitle -> null donc nous utiliserons le nom du processus
 printfn "'%s' utilise un espace de travail de : \n%d octets" 
         consoMemoire.ProcessName 
         consoMemoire.WorkingSet64
+
+let listeProcessus = 
+    query {
+        for procActif in Process.GetProcesses () do
+            // ne fonctionne pas sous Linux :
+            // where (procActif.MainWindowHandle <> nativeint 0)
+            select procActif
+    }
+
+// opérateur : contains
+let firefoxFonctionnement = 
+    query {
+        for firefox in listeProcessus do 
+            select firefox.ProcessName
+            contains "firefox"}
+
+// opérateur : count
+let processFF =
+    query {
+        for proc in Process.GetProcesses () do
+            where (proc.ProcessName = "firefox")
+            select proc
+            count
+            }
+
+let compteurServices = 
+    query {
+        for proc in Process.GetProcesses () do
+            where (proc.MainWindowHandle = nativeint 0)
+            select proc
+            count
+        }
+
+// opérateur : distinct 
+let seqNombreInferieurA50 = 
+    let alea = new Random()
+    seq {
+        for i=1 to 100 do yield alea.Next () % 50
+        }
+
+let nbDistincts = 
+    query {
+        for nbAleatoire in seqNombreInferieurA50 do
+            select nbAleatoire
+            distinct
+        }
+printfn "%d nbres aléatoires différents." <| Seq.length nbDistincts
+
+// opérateurs de tri
+let processTries =
+    query {
+        for proc in Process.GetProcesses () do
+            let estFenetree = proc.MainWindowHandle <> nativeint 0
+            sortBy estFenetree
+            thenBy proc.ProcessName
+            select proc}
