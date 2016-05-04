@@ -177,3 +177,23 @@ let chiffrement = ROT13 "PORTEZ CE VIEUX WHISKY AU JUGE BLOND QUI FUME"
 
 printfn "CHIFFRE : %s" chiffrement
 printfn "DECHIFFRE : %s" (ROT13 chiffrement)
+
+// découpage de tableaux
+let jours = Enum.GetNames( typeof<DayOfWeek> )
+jours.[2..4]
+jours.[..4]
+jours.[4..]
+jours.[*]
+
+// Autres manières de créer des tableaux
+// ARRAY.INIT
+// exemple simple,
+Array.init 4 ((+) 0 )
+// du livre,
+let division = 4.0
+let deuxPI = 2.0 * Math.PI
+Array.init (int division) (fun i -> float i * deuxPI / division)
+
+// ARRAY.ZEROCREATE
+let tableauVideEntier : int [] = Array.zeroCreate 3
+let tableauVideChaine : string [] = Array.zeroCreate 3
