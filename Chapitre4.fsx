@@ -1,4 +1,5 @@
-﻿open System
+﻿// PROGRAMMATION IMPERATIVE
+open System
 
 //null et les types référence
 let estNull = 

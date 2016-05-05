@@ -1,4 +1,5 @@
-﻿open System
+﻿// PROGRAMMATION FONCTIONNELLE
+open System
 open System.IO
 
 (* Application partielle de fonction *)

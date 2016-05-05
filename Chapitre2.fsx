@@ -1,4 +1,5 @@
-﻿open System
+﻿// FONDAMENTAUX
+open System
 
 // Découverte de Liste
 
