@@ -197,3 +197,37 @@ Array.init (int division) (fun i -> float i * deuxPI / division)
 // ARRAY.ZEROCREATE
 let tableauVideEntier : int [] = Array.zeroCreate 3
 let tableauVideChaine : string [] = Array.zeroCreate 3
+
+// Pattern matching : 
+
+let descriptionTableau tab = match tab with
+                             | null -> "Tableau nul"
+                             | [||] -> "Tableau vide"
+                             | [|x|] -> sprintf "Tableau à un élément : %A" x
+                             | [|x;y|] -> sprintf "Tableau à deux éléments : %A et %A" x y
+                             | tableau -> sprintf "Tableau à %d éléments : %A" tableau.Length tableau
+
+[|1..5|] |> descriptionTableau
+[|("tuple", 1,2,3)|] |> descriptionTableau
+
+// quelques fonctions issues de Array
+
+(* partition *)
+let pair x = (x % 2) <> 1
+
+[| 1..10 |] |> Array.partition pair 
+
+(* tryFind et tryFindIndex *)
+let rec puissanceDeDeux x = 
+    match x with
+    | _ when x = 2 -> true
+    | _ when x % 2 = 1 -> false
+    | _ -> puissanceDeDeux (x/2)
+
+[|1; 3; 6; 64; 32 |] |> Array.tryFind puissanceDeDeux
+[|1; 3; 6; 64; 32 |] |> Array.tryFindIndex puissanceDeDeux
+
+(* opérateurs d'agrégation : iteri *)
+let voyelles = [|'a';'e';'i';'o';'u'|]
+Array.iteri (fun index caractere -> printfn "voyelles.[%d] : %c" index caractere) 
+            voyelles
