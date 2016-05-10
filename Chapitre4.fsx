@@ -232,3 +232,38 @@ let rec puissanceDeDeux x =
 let voyelles = [|'a';'e';'i';'o';'u'|]
 Array.iteri (fun index caractere -> printfn "voyelles.[%d] : %c" index caractere) 
             voyelles
+
+// Tableaux Multidimensionnels
+// -rectangulaires
+let matriceEquilibree : float [,] = Array2D.zeroCreate 3 3
+matriceEquilibree.[0,0] <- 1.0
+matriceEquilibree.[1,1] <- 1.0
+matriceEquilibree.[2,2] <- 1.0
+matriceEquilibree
+
+// -irréguliers
+let tabIrreguliers : int[][] = Array.zeroCreate 3
+tabIrreguliers.[0] <- Array.init 1 (fun x -> x)
+tabIrreguliers.[1] <- Array.init 2 (fun x -> x)
+tabIrreguliers.[2] <- Array.init 3 (fun x -> x)
+tabIrreguliers
+
+// Types de collection mutable
+// - List<T'>
+// -- création
+open System.Collections.Generic
+let planetesList = new List<String>()
+// -- ajouts individuels
+planetesList.Add "Mercure"
+planetesList.Add "Vénus"
+planetesList.Add "Terre"
+
+// -- ajouts multiples en une seule fois
+planetesList.AddRange [|"Jupiter"; "Saturne"; "Uranus"; "Neptune"; "Pluton"|]
+
+// -- autres actions : insertion, suppression, comptage
+planetesList.Count
+planetesList.Insert (3, "Mars")
+planetesList.Remove "Pluton"
+planetesList.Remove "Endor"
+planetesList.Count
