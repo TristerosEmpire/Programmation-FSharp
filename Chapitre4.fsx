@@ -267,3 +267,44 @@ planetesList.Insert (3, "Mars")
 planetesList.Remove "Pluton"
 planetesList.Remove "Endor"
 planetesList.Count
+
+
+// Dictionnaires : Dictionary<'T>
+// création d'une mesure : unité de masse atomique ou uma
+[<Measure>]
+type uma
+// création du type Atome (enregistrement/record)
+type Atome = {Nom: string; Masse: float<uma>}
+// création d'un dictionnaire et effectuons quelques ajouts.
+// tpe pour table périodique des éléments
+let tpe = new Dictionary<string, Atome>()
+tpe.Add("H", {Nom="hydrogène"; Masse=1.0079<uma>})
+tpe.Add("He", {Nom="hélium"; Masse=4.0026<uma>})
+tpe.Add("Li", {Nom="lithium"; Masse=6.9410<uma>})
+tpe.Add("Be", {Nom="béryllium"; Masse=9.0122<uma>})
+tpe.Add("B", {Nom="bore"; Masse=10.811<uma>})
+
+printfn "La table contient pour l'instant %d éléments." tpe.Count
+
+let afficheElement symbole = 
+    let (succes, atome) = tpe.TryGetValue symbole
+    match succes with
+    | true -> printfn "L'atome %s, de symbole %s, a pour masse atomique %A" atome.Nom symbole atome.Masse
+    | false-> printfn "Erreur : le symbole %s n'est pas répertorié dans la table." symbole
+
+afficheElement "B"
+afficheElement "V"
+
+// HashSet<'T>
+type ID = {Nom: string; Prenom: string; Annee: int}
+
+let prixTuring = new HashSet<ID>()
+prixTuring.Add {Nom="Adelman"; Prenom="Leonard Max"; Annee=2002}
+prixTuring.Add {Nom="Ritchie"; Prenom="Dennis"; Annee=1983}
+prixTuring.Add {Nom="Dijkstra"; Prenom="Edsger"; Annee=1972}
+prixTuring.Add {Nom="Minsky"; Prenom="Marvin"; Annee=1969}
+prixTuring.Add {Nom="Liskov"; Prenom="Barbara"; Annee=2008}
+prixTuring.Add {Nom="Liskov"; Prenom="Barbara"; Annee=2008}
+printfn "Ma liste de prixTuring compte %d éléments." prixTuring.Count
+
+prixTuring.Contains {Nom="Liskov"; Prenom="Barbara"; Annee=2008}
