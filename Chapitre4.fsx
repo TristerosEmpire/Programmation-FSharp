@@ -296,15 +296,44 @@ afficheElement "B"
 afficheElement "V"
 
 // HashSet<'T>
-type ID = {Nom: string; Prenom: string; Annee: int}
 
-let prixTuring = new HashSet<ID>()
-prixTuring.Add {Nom="Adelman"; Prenom="Leonard Max"; Annee=2002}
-prixTuring.Add {Nom="Ritchie"; Prenom="Dennis"; Annee=1983}
-prixTuring.Add {Nom="Dijkstra"; Prenom="Edsger"; Annee=1972}
-prixTuring.Add {Nom="Minsky"; Prenom="Marvin"; Annee=1969}
-prixTuring.Add {Nom="Liskov"; Prenom="Barbara"; Annee=2008}
-prixTuring.Add {Nom="Liskov"; Prenom="Barbara"; Annee=2008}
+let prixTuring = new HashSet<string>()
+prixTuring.Add "Adelma, Leonard Max"
+prixTuring.Add "Ritchie, Dennis"
+prixTuring.Add "Dijkstra, Edsger"
+prixTuring.Add "Minsky, Marvin"
+prixTuring.Add "Liskov, Barbara"
+prixTuring.Add "Liskov, Barbara"
 printfn "Ma liste de prixTuring compte %d éléments." prixTuring.Count
 
-prixTuring.Contains {Nom="Liskov"; Prenom="Barbara"; Annee=2008}
+prixTuring.Contains "Liskov, Barbara"
+
+// Boucles
+// - while
+let mutable i = 0
+
+while i < 6 do
+    printfn "%d" i
+    i <- i + 1
+
+// - for : boucle simple
+for i=1 to 5 do
+    printfn "%d" i
+
+for i=5 downto 1 do
+    printfn "%d" i
+
+// - for et collections "énumérables"
+type PrixTuringRec = {Prenom: string;Nom: string; Annee: int}
+
+let liste = [
+    {Prenom="John"; Nom="Backus"; Annee=1977};
+    {Prenom="Dennis"; Nom="Ricthie"; Annee=1983};
+    {Prenom="John"; Nom="Cocke"; Annee=1987};
+    {Prenom="Frances"; Nom="Allen"; Annee=2006};
+]
+
+for record in liste do 
+    if record.Prenom = "John" then
+        printfn "Un certain John a reçu le Prix Turing en %d et ce fut %s %s" 
+                record.Annee record.Prenom record.Nom
