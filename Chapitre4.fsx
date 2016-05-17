@@ -1,5 +1,6 @@
 ﻿// PROGRAMMATION IMPERATIVE
 open System
+open System.IO
 
 //null et les types référence
 let estNull = 
@@ -337,3 +338,63 @@ for record in liste do
     if record.Prenom = "John" then
         printfn "Un certain John a reçu le Prix Turing en %d et ce fut %s %s" 
                 record.Annee record.Prenom record.Nom
+
+// EXCEPTIONS
+// try....with
+// le code d'origine a été remanié pour fonctionner sans avoir accès à un point d'entrée
+
+let rechercheFichier fichier = 
+    try
+        printfn "Essai de récupération d'information sur le fichier %s" fichier
+
+        // Est-ce que le répertoire existe ?
+        let racine = Path.GetPathRoot fichier
+        let rep = Directory.GetParent fichier
+
+        if not <| Directory.Exists rep.FullName then
+            raise <| new DirectoryNotFoundException(fichier)
+        
+        // Est-ce que le lecteur racine du fichier existe ?
+        let matchingDrive =
+            Directory.GetLogicalDrives () 
+            |> Array.tryFind (fun lecteur -> lecteur = racine)
+
+        if matchingDrive = None then 
+            raise <| new DriveNotFoundException(fichier)
+
+
+        // Est-ce que le fichier existe ?
+        if not <| File.Exists fichier then
+            raise <| new FileNotFoundException(fichier)
+
+        let infoFichier = new FileInfo(fichier)
+
+        printfn "Création : %s" <| infoFichier.CreationTime.ToString ()
+        printfn "Accès : %s"    <| infoFichier.LastAccessTime.ToString ()
+        printfn "Poids : %s"    <| infoFichier.Length.ToString ()
+
+    with
+    | :? DriveNotFoundException
+    | :? DirectoryNotFoundException
+        -> printfn "Lecteur non pris en charge ou répertoire non trouvé."
+    | :? FileNotFoundException as ex
+        -> printfn "FileNotFoundException: %s" ex.Message
+    | :? IOException as ex
+        -> printfn "IOException: %s" ex.Message
+    | _ as ex
+        -> printfn "Exception: %s" ex.Message
+
+// try...finally
+let tryFinallyTest () =
+    try
+        printfn "Avant la levée de l'exception."
+        failwith "ERREUR !!!!"
+        printfn "Ce message ne sera jamais affiché à la console. Pas d'évaluation."   
+     finally
+        printfn "Le finally est évalué : donc affiché"
+
+let test () =
+    try
+        tryFinallyTest ()
+    with
+    | ex -> printfn "L'exception sera customisée avec le message du failwith : %s" ex.Message
