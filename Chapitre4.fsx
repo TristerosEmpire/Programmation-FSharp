@@ -3,8 +3,8 @@ open System
 open System.IO
 
 //null et les types référence
-let estNull = 
-    function 
+let estNull =
+    function
     | null -> true
     | _ -> false
 
@@ -29,9 +29,9 @@ printfn "Salut %s !" message
 
 // restrictions avec la mutabilité pour
 // les versions antérieures de F# 4.0
-let utilisationInvalide() = 
+let utilisationInvalide() =
     let mutable x = 0
-    // avec Monodevelop : on a une erreur de l'analyseur 
+    // avec Monodevelop : on a une erreur de l'analyseur
     // en revanche il est parfaitement géré par Ionide
     let incrementX() = x <- x + 1
     incrementX()
@@ -59,16 +59,16 @@ decr z
 printfn "Le dernier contenu de la référence z : %d" z.contents
 
 // RECORDS MUTABLES
-type VoitureMutable = 
+type VoitureMutable =
     { Constructeur : string
       Modele : string
       mutable Km : int }
 
-let kilometrage voiture = 
+let kilometrage voiture =
     let alea = new Random()
     voiture.Km <- voiture.Km + alea.Next() % 100
 
-let mustang = 
+let mustang =
     { Constructeur = "Ford"
       Modele = "Mustang"
       Km = 0 }
@@ -105,15 +105,15 @@ type Hz = seconde^-1
 
 // exemple plus complexe avec l'ajout de méthodes statiques en parallélisant les unités
 [<Measure>]
-type far = 
+type far =
     static member ConvertirEnCelsius(x : float<far>) = (5.0<cel> / 9.0<far>) * (x - 32.0<far>)
 
-and [<Measure>] cel = 
+and [<Measure>] cel =
     static member ConvertirEnFahrenheit(x : float<cel>) = (9.0<far> / 5.0<cel> * x) + 32.0<far>
 
 far.ConvertirEnCelsius 20.0<far>
 
-let afficheTemperature (tmp : float<far>) = 
+let afficheTemperature (tmp : float<far>) =
     match tmp with
     | _ when tmp < 32.0<_> -> printfn "Ca gèle"
     | _ when tmp < 65.0<_> -> printfn "Froid"
@@ -135,7 +135,7 @@ carreGenerique 2.0
 carreGenerique 2.0<metre>
 
 // Objet et unités de mesure génériques
-type Point<[<Measure>] 'u>(x : float<'u>, y : float<'u>) = 
+type Point<[<Measure>] 'u>(x : float<'u>, y : float<'u>) =
     member this.X = x
     member this.Y = y
     member this.XSansUnite = (float this.X)
@@ -152,19 +152,19 @@ point.ToString()
 
 // TABLEAUX
 // façon compréhension
-let carres = 
+let carres =
     [| for i in 1..7 -> i * i |]
 
 // façon traditionnelle
 let carres2 = [| 1; 4; 9; 16; 25; 36; 49; 64; 81; 100 |]
 
-// Utilisation du chiffre ROT13 
-let ROT13(texte : string) = 
+// Utilisation du chiffre ROT13
+let ROT13(texte : string) =
     let tabCaracteres = Array.ofSeq texte
-    
-    let rot13 (caractere : char) = 
-        if Char.IsLetter caractere then 
-            let nvCaractere = 
+
+    let rot13 (caractere : char) =
+        if Char.IsLetter caractere then
+            let nvCaractere =
                 (int caractere)
                 |> (fun x -> x - (int 'A'))
                 |> (fun x -> (x + 13) % 26)
@@ -200,7 +200,7 @@ Array.init (int division) (fun i -> float i * deuxPI / division)
 let tableauVideEntier : int [] = Array.zeroCreate 3
 let tableauVideChaine : string [] = Array.zeroCreate 3
 
-// Pattern matching : 
+// Pattern matching :
 
 let descriptionTableau tab = match tab with
                              | null -> "Tableau nul"
@@ -217,10 +217,10 @@ let descriptionTableau tab = match tab with
 (* partition *)
 let pair x = (x % 2) <> 1
 
-[| 1..10 |] |> Array.partition pair 
+[| 1..10 |] |> Array.partition pair
 
 (* tryFind et tryFindIndex *)
-let rec puissanceDeDeux x = 
+let rec puissanceDeDeux x =
     match x with
     | _ when x = 2 -> true
     | _ when x % 2 = 1 -> false
@@ -231,7 +231,7 @@ let rec puissanceDeDeux x =
 
 (* opérateurs d'agrégation : iteri *)
 let voyelles = [|'a';'e';'i';'o';'u'|]
-Array.iteri (fun index caractere -> printfn "voyelles.[%d] : %c" index caractere) 
+Array.iteri (fun index caractere -> printfn "voyelles.[%d] : %c" index caractere)
             voyelles
 
 // Tableaux Multidimensionnels
@@ -287,7 +287,7 @@ tpe.Add("B", {Nom="bore"; Masse=10.811<uma>})
 
 printfn "La table contient pour l'instant %d éléments." tpe.Count
 
-let afficheElement symbole = 
+let afficheElement symbole =
     let (succes, atome) = tpe.TryGetValue symbole
     match succes with
     | true -> printfn "L'atome %s, de symbole %s, a pour masse atomique %A" atome.Nom symbole atome.Masse
@@ -334,16 +334,16 @@ let liste = [
     {Prenom="Frances"; Nom="Allen"; Annee=2006};
 ]
 
-for record in liste do 
+for record in liste do
     if record.Prenom = "John" then
-        printfn "Un certain John a reçu le Prix Turing en %d et ce fut %s %s" 
+        printfn "Un certain John a reçu le Prix Turing en %d et ce fut %s %s"
                 record.Annee record.Prenom record.Nom
 
 // EXCEPTIONS
 // try....with
 // le code d'origine a été remanié pour fonctionner sans avoir accès à un point d'entrée
 
-let rechercheFichier fichier = 
+let rechercheFichier fichier =
     try
         printfn "Essai de récupération d'information sur le fichier %s" fichier
 
@@ -353,13 +353,13 @@ let rechercheFichier fichier =
 
         if not <| Directory.Exists rep.FullName then
             raise <| new DirectoryNotFoundException(fichier)
-        
+
         // Est-ce que le lecteur racine du fichier existe ?
         let matchingDrive =
-            Directory.GetLogicalDrives () 
+            Directory.GetLogicalDrives ()
             |> Array.tryFind (fun lecteur -> lecteur = racine)
 
-        if matchingDrive = None then 
+        if matchingDrive = None then
             raise <| new DriveNotFoundException(fichier)
 
 
@@ -389,7 +389,7 @@ let tryFinallyTest () =
     try
         printfn "Avant la levée de l'exception."
         failwith "ERREUR !!!!"
-        printfn "Ce message ne sera jamais affiché à la console. Pas d'évaluation."   
+        printfn "Ce message ne sera jamais affiché à la console. Pas d'évaluation."
      finally
         printfn "Le finally est évalué : donc affiché"
 
@@ -398,3 +398,23 @@ let test () =
         tryFinallyTest ()
     with
     | ex -> printfn "L'exception sera customisée avec le message du failwith : %s" ex.Message
+
+
+// customisation des exceptions
+
+exception FirstCustomException of string
+exception SecondCustomException of string * string
+
+let testExceptionCustom valeur1 valeur2 =
+    try
+        if (valeur1.GetType ()).Name = "Int32" then
+            printfn "La valeur est un entier 32 bits"
+        else raise <| FirstCustomException (valeur1.GetType ()).Name
+
+        if (valeur2.GetType ()).Name = "String" then
+            printfn "La valeur est une chaine."
+        else raise <| SecondCustomException ("valeur2", (valeur2.GetType ()).Name)
+
+    with
+    | FirstCustomException str -> printfn "Erreur sur la valeur1 : attendue un entier 32 bits et non %s" str
+    | SecondCustomException (s1, s2) -> printfn "Erreur sur la %s qui attendait une chaine et non %s" s1 s2
