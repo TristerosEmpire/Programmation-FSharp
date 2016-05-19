@@ -6,4 +6,4 @@ Les différents codes sources présentés ici sont des reprises et des essais co
 - :ok: chapitre 2
 - :ok: chapitre 3
 - :ok: chapitre 4
-- :arrow_forward: chapitre 5 (prochainement)
+- :arrow_forward: chapitre 5 (en cours)
