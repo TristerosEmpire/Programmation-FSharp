@@ -1,5 +1,6 @@
 ﻿// PROGRAMMATION ORIENTEE OBJET
 open System
+open System.Globalization
 open System.IO
 
 // Présentation de System.Object
@@ -119,3 +120,32 @@ p1.Length
 
 let p2  = new Point (4.0, 5.0)
 p2.Length
+
+// Second exemple avec un traitement AVANT initialisation des champs
+
+type Point2 = 
+    val p1 : int
+    val p2 : int
+
+    new (arg:string) as this = 
+        // prétraitement
+        if arg = null then
+            raise <| new ArgumentException("Argument non valide")
+        let parties = arg.Split [|','|]
+        let style = NumberStyles.Float
+
+        let (succesX, x) = Int32.TryParse parties.[0]
+        let (succesY, y) = Int32.TryParse parties.[1]
+
+        if not succesX || not succesY then
+            raise <| new ArgumentException("Le parsing ne s'est pas exécuté correctement : ne prend que des chaines e.g. \"1,2,3\"")
+
+        //initialisation des arguments
+        {p1 = x; p2 = y}
+
+        //post-traitement
+        then
+            printfn "Initialisation du point à [%i,%i]" this.p1 this.p2
+
+
+let p1v2 = new Point2("1.0,2.0")
