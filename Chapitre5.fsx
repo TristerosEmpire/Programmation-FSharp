@@ -95,3 +95,27 @@ let yUD2 = A(4,2)
 
 xUD2 = xUD2
 yUD2 = xUD2
+
+// Classes
+// construction explicite
+
+// premier exemple
+type Point =
+    val px : float
+    val py : float
+
+    //Premier constructeur sans argument
+    new () = {px=0.0; py=0.0}
+
+    //Second constructeur avec 2 arguments
+    new (x, y) = {px=x ; py=y}
+
+    member this.Length = 
+        let sqr x = x * x
+        sqrt <| sqr this.px + this.py
+
+let p1 = new Point ()
+p1.Length
+
+let p2  = new Point (4.0, 5.0)
+p2.Length
