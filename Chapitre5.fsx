@@ -180,3 +180,26 @@ type Point3 (x:float, y:float) =
         new Point3 (x, y)
 
 // Classes génériques
+type CreationTableau<'a>(x: 'a) =
+    member this.Vide : 'a[] = [||]
+    member this.CreationDeTaille (taille:int) : 'a [] =
+        Array.create taille x
+
+// création d'un tableau en laissant le compilateur inféré le type
+let t = new CreationTableau<_> ("une chaine")
+t.CreationDeTaille 5
+
+let t2 = new CreationTableau<int*char> ((42, 'r'))
+t2.CreationDeTaille 3
+
+// Enregistrements et unions discriminées génériques
+type GenRec<'a, 'b> = {
+    Champs1 : 'a;
+    Champs2 : 'b}
+let t3 = {Champs1 = "Bleu"; Champs2 = 'B'}
+
+type UDGen<'a> =
+    | Tag1 of 'a
+    | Tag2 of string * 'a list
+
+Tag2("Couleurs", ['R';'G';'B'])
