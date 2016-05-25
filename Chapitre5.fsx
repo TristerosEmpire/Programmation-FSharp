@@ -148,4 +148,35 @@ type Point2 =
             printfn "Initialisation du point à [%i,%i]" this.p1 this.p2
 
 
-let p1v2 = new Point2("1.0,2.0")
+let p1v2 = new Point2("1,2")
+
+// création implicite
+type Point3 (x:float, y:float) =
+    let longueur =
+        let carre x = x * x
+        sqrt <| carre x + carre y
+
+    do printfn "Initialisation des valeurs à [%f, %f]" x y
+
+    member this.X = x
+    member this.Y = y
+    member this.Longueur = longueur
+
+    // définition d'un constructeur customisé vide avec valeurs par défaut
+    new() =  new Point3(0.0,0.0)
+
+    // autre constructeur 
+    new (txt : string) = 
+        if txt = null then
+            raise <| new ArgumentException("Pas de texte fourni en paramètre")
+        let parties = txt.Split [|','|]
+        let (succesX, x) = Double.TryParse parties.[0]
+        let (succesY, y) = Double.TryParse parties.[1]
+
+        if not succesX || not succesY then
+            raise <| new ArgumentException("Texte non valide.")
+
+        // Appel du constructeur primaire
+        new Point3 (x, y)
+
+// Classes génériques
