@@ -203,3 +203,46 @@ type UDGen<'a> =
     | Tag2 of string * 'a list
 
 Tag2("Couleurs", ['R';'G';'B'])
+
+// Auto-identificateur : this n'est qu'une convention
+
+type Cercle =
+    val rayon : float
+    new (r) = {rayon = r}
+    member truc.Rayon = truc.rayon
+    member bidule.Aire = Math.PI * bidule.rayon * bidule.rayon
+
+let cercle = new Cercle(2.0)
+cercle.Rayon
+cercle.Aire
+
+// Mutateurs/Accesseurs
+
+[<Measure>]
+type ml
+
+type BouteilleEau() =
+    let mutable volume = 0.0<ml>
+
+    //propriété en lecture seule
+    member this.Vide = (volume = 0.0<ml>)
+
+    //propriété en lecture/écriture
+    member this.Volume with get ()              = volume
+                       and set nouveauVolume    = volume <- nouveauVolume
+
+let bouteille = new BouteilleEau()
+bouteille.Vide
+bouteille.Volume
+bouteille.Volume <- 1000.0<ml>
+bouteille.Vide
+
+// on peut bénéficier de l'implémentation automatique des accesseurs/mutateurs
+type BouteilleEau2() =
+    member this.Vide = (this.Volume = 0.0<ml>)
+    member val Volume = 0.0<ml> with get, set
+
+// autre petit test
+type BouteilleEau3(vol:float<ml>)=
+    member this.Vide = (this.Volume = 0.0<ml>)
+    member val Volume = vol with get
