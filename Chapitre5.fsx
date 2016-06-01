@@ -2,6 +2,8 @@
 open System
 open System.Globalization
 open System.IO
+open System.Windows.Forms
+open System.Drawing
 
 // Présentation de System.Object
 // surcharge de ToString ()
@@ -74,7 +76,7 @@ xr=yr
 xr=zr
 
 // --> Unions discriminées
-type UD = 
+type UD =
     | A of int*int
     | B
 
@@ -87,7 +89,7 @@ xUD = zUD
 
 // --> attribut ReferenceEquality
 [<ReferenceEquality>]
-type UD2 = 
+type UD2 =
     | A of int*int
     | B
 
@@ -111,7 +113,7 @@ type Point =
     //Second constructeur avec 2 arguments
     new (x, y) = {px=x ; py=y}
 
-    member this.Length = 
+    member this.Length =
         let sqr x = x * x
         sqrt <| sqr this.px + this.py
 
@@ -123,11 +125,11 @@ p2.Length
 
 // Second exemple avec un traitement AVANT initialisation des champs
 
-type Point2 = 
+type Point2 =
     val p1 : int
     val p2 : int
 
-    new (arg:string) as this = 
+    new (arg:string) as this =
         // prétraitement
         if arg = null then
             raise <| new ArgumentException("Argument non valide")
@@ -165,8 +167,8 @@ type Point3 (x:float, y:float) =
     // définition d'un constructeur customisé vide avec valeurs par défaut
     new() =  new Point3(0.0,0.0)
 
-    // autre constructeur 
-    new (txt : string) = 
+    // autre constructeur
+    new (txt : string) =
         if txt = null then
             raise <| new ArgumentException("Pas de texte fourni en paramètre")
         let parties = txt.Split [|','|]
@@ -246,3 +248,42 @@ type BouteilleEau2() =
 type BouteilleEau3(vol:float<ml>)=
     member this.Vide = (this.Volume = 0.0<ml>)
     member val Volume = vol with get
+
+// accès aux propriétés via le constructeur
+//1er exemple
+let bouteilleX = new BouteilleEau(
+                    Volume = 10.0<ml>
+)
+bouteilleX.Vide
+
+//2nd exemple : pour Linux et Windows
+let f2 = new Form(Text="Window Title", TopMost=true, Width=640, Height=480)
+f2.ShowDialog ()
+
+// Méthodes de classes
+// Convention: Pascal case : cf. ligne 285
+
+type Television =
+
+    val mutable m_chaine : int
+    val mutable m_allume : bool
+
+    new () = {m_chaine = 7; m_allume=true}
+
+    member this.Allume () =
+        printfn "Télévision allumé - cerveau éteint."
+        this.m_allume = true
+
+    member this.Eteint () =
+        printfn "Télévision éteinte - cerveau rallumé."
+        this.m_allume = false
+
+    (* Il est conseillé d'utiliser des tuples pour regrouper
+    les valeurs dans un tuple car l'application partielle n'est supportée
+    que par F#
+    *)
+    member this.ChangeChaine (canal:int) =
+        if this.m_allume = false then
+            failwith "Euh comment changer une chaine quand la télé est éteinte ?!"
+        printfn "La chaine %d va changer..." this.m_chaine
+        this.m_chaine <- canal
