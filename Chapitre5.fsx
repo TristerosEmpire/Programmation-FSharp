@@ -285,5 +285,61 @@ type Television =
     member this.ChangeChaine (canal:int) =
         if this.m_allume = false then
             failwith "Euh comment changer une chaine quand la télé est éteinte ?!"
-        printfn "La chaine %d va changer..." this.m_chaine
+        printfn "La chaîne %d va changer..." this.m_chaine
         this.m_chaine <- canal
+        printfn "... pour la chaîne n°%d" this.m_chaine
+
+// Méthodes statiques, propriétés et champs
+type UneClasse () =
+    static member ProprieteStatique = 5;;
+
+UneClasse.ProprieteStatique;;
+
+// exemple plus poussé : le pattern Singleton
+[<AllowNullLiteral>]
+type ClasseSingleton private () =
+    //static let tab:ClasseSingleton [] = Array.singleton (ClasseSingleton())
+    static let tab2:ClasseSingleton [] = [|null|]
+    static member private Add () = tab2.[0] <- ClasseSingleton()
+    static member GetInstance () = 
+        if tab2.[0] = null then 
+            ClasseSingleton.Add ()
+            printfn "Nouvelle instance ajoutée"
+        else printfn "Instance déjà présente"
+
+// y a plus simple : http://www.fssnip.net/7p
+
+// Surcharge de méthode
+type Rubis private (poids, brillance) =
+
+    let mutable m_poids = poids
+    let mutable m_brillance = brillance
+
+    // le polissage augmente la brillance et réduit le poids
+    member this.Polissage () =
+        this.Poids <- this.Poids - 0.1
+        m_brillance <- m_brillance + 0.1
+
+    // création d'un accesseur privé
+    member private this.Poids with get () = m_poids
+
+    // création d'un mutateur public
+    member public this.Poids with set nouveauPoids = m_poids <- nouveauPoids
+
+    member this.Brillance = m_brillance
+
+    // Surcharge
+    public new () = 
+        let rng = new Random()
+        let poids = float (rng.Next () % 100) * 0.01
+        let brillance = float (rng.Next () % 100) + 0.1
+        new Rubis(poids, brillance)
+
+    public new (carat) =
+        new Rubis(carat, (new Random()).Next () % 100 |> float |> (*) 0.01)
+
+(* 
+Les fichiers signature en F# : se reporter aux fichiers ClasseEtSignature.fsi
+et ClassesEtSignature.fs. A noter: il convient d'abord d'ouvrir le fichier signature FSI
+puis le fichier source FS
+*)
