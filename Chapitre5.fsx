@@ -343,3 +343,48 @@ Les fichiers signature en F# : se reporter aux fichiers ClasseEtSignature.fsi
 et ClassesEtSignature.fs. A noter: il convient d'abord d'ouvrir le fichier signature FSI
 puis le fichier source FS
 *)
+
+// L'héritage
+
+type ClasseMere =                               //constructeur explicite
+
+    val m_champs1 : int
+    new (champs1) = {m_champs1 = champs1}
+
+    member this.Champs1Mere = this.m_champs1
+
+// classe fille avec constructeur implicite
+type ClasseFille(champs1, champs2) =
+    inherit ClasseMere(champs1)
+
+    member this.Champs2 = champs2
+    member this.Champs1 = this.m_champs1
+
+    member this.PrintValues = printfn "Valeurs : %d (directement de la classe mère) et %d de la classe fille" 
+                                       this.Champs1 this.Champs2
+
+// classe fille avec constructeur explicite
+type ClasseFilleExplicite =
+    inherit ClasseMere
+
+    val m_champs2 : int
+
+    new (champs1, champs2) = {
+        inherit ClasseMere(champs1)
+
+        m_champs2 = champs2
+
+    }
+
+    member this.Champs2 = this.m_champs2
+
+    member this.Champs1 = this.Champs1Mere
+
+    member this.PrintValues = printfn "Valeurs : %d (directement de la classe mère) et %d de la classe fille" 
+                                       this.Champs1 this.Champs2
+
+let fille = new ClasseFilleExplicite(1, 2);;
+fille.Champs1;;
+fille.Champs2;;
+fille.PrintValues;;
+
