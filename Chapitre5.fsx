@@ -351,7 +351,7 @@ type ClasseMere =                               //constructeur explicite
     val m_champs1 : int
     new (champs1) = {m_champs1 = champs1}
 
-    member this.Champs1Mere = this.m_champs1
+    member this.Champs1 = this.m_champs1
 
 // classe fille avec constructeur implicite
 type ClasseFille(champs1, champs2) =
@@ -378,8 +378,6 @@ type ClasseFilleExplicite =
 
     member this.Champs2 = this.m_champs2
 
-    member this.Champs1 = this.Champs1Mere
-
     member this.PrintValues = printfn "Valeurs : %d (directement de la classe mère) et %d de la classe fille" 
                                        this.Champs1 this.Champs2
 
@@ -388,3 +386,33 @@ fille.Champs1;;
 fille.Champs2;;
 fille.PrintValues;;
 
+
+// Redéfinition et surcharge de méthodes
+[<Measure>]
+type calories
+
+type Sandwich() =
+    abstract Ingredients : string list
+    default this.Ingredients = []
+
+    abstract Calories : int<calories>
+    default this.Calories = 0<calories>
+
+type BLTSandwich() = 
+    inherit Sandwich()
+
+    override this.Ingredients = ["Bacon";"Laitue";"Tomate"]
+    override this.Calories = 330<calories>
+
+type DGSandwich() =
+    inherit Sandwich()
+
+    override this.Ingredients = ["Dinde";"Gruyère"]
+    override this.Calories = 330<calories>
+
+// maintenant on dérive de BLTSandwich une sous-classe
+type BLTCSandwich() = 
+    inherit BLTSandwich()
+
+    override this.Ingredients = "Cornichons" :: base.Ingredients
+    override this.Calories = 50<calories> + base.Calories
