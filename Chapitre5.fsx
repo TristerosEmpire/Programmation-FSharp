@@ -416,3 +416,17 @@ type BLTCSandwich() =
 
     override this.Ingredients = "Cornichons" :: base.Ingredients
     override this.Calories = 50<calories> + base.Calories
+
+// Comment écrire une classe abstraite ?
+[<AbstractClass>]
+type ClasseAbstraite() = 
+    member this.Alpha () = true
+    abstract member Bravo : unit -> bool
+
+type ClasseAbstraiteFille() = 
+    inherit ClasseAbstraite()
+
+    override this.Bravo () = false
+
+let caf = new ClasseAbstraiteFille();;
+caf.Bravo ();;
