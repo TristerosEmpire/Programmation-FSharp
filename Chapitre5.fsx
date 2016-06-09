@@ -29,18 +29,18 @@ chaine.AssemblyQualifiedName
 
 // Egalité des objets
 // --> type de valeur
-let x = 42
-let y = 42
-x = y
+let x_int = 42
+let y_int = 42
+x_int = y_int
 
 // --> type de référence
 type ClassType (x:int) =
     member this.Value = x
 
-let x = new ClassType(42)
-let y = new ClassType(42)
-x = x
-y = x
+let xCT = new ClassType(42)
+let yCT = new ClassType(42)
+xCT = xCT
+yCT = xCT
 
 // --> customisation de Object.Equals
 type ClassType2 (x:int) =
@@ -65,7 +65,7 @@ let yt = (1, 'k', "chaine")
 let zt = (1, "k", "chaine")
 
 xt = yt
-xt = zt
+// Cette expression va générer une erreur : xt = zt
 
 // --> Enregistrements
 type R = {Element1 : string; Element2 : int }
@@ -453,3 +453,31 @@ type ClasseFilleScelleeInstanciee()=
             printfn "La valeur du booléen de la classe scellée est %A" (classeScellee.Alpha ())
 
 ClasseFilleScelleeInstanciee.Resultat ();;
+
+// Casting
+// casting statique : conversion vers une classe mère ou plus élevée dans la hiérarchie
+// de l'héritage -> du bas vers le haut
+
+[<AbstractClass>]
+type Animal(famille:string) =
+    abstract member Famille : string
+    default this.Famille = famille
+
+[<AbstractClass>]
+type Chien() =
+    inherit Animal("Mammifère")
+    abstract member Race : string
+
+type CotonDeTulear() =
+    inherit Chien()
+    override this.Race = "Coton de Tulear"
+
+let steve = new CotonDeTulear();;
+let steveAsChien = steve :> Chien;;
+let steveAsObject = steve :> Object;;
+let steveAsAnimal = steve :> Animal;;
+let steveAsObject2 = steveAsChien :> Object;;
+
+// Casting dynamique : conversion du haut vers le bas dans l'arbre de l'héritage
+let steveAsChienFromObj = steveAsObject :?> Chien
+steveAsChienFromObj.Famille
