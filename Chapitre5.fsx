@@ -131,7 +131,8 @@ type Point2 =
 
     new (arg:string) as this =
         // prétraitement
-        if arg = null then
+        // refactorisation pour F#4 de arg = null en isNull arg
+        if isNull arg then
             raise <| new ArgumentException("Argument non valide")
         let parties = arg.Split [|','|]
         let style = NumberStyles.Float
@@ -169,7 +170,8 @@ type Point3 (x:float, y:float) =
 
     // autre constructeur
     new (txt : string) =
-        if txt = null then
+        // F#4 : refactorisation de txt = null en isNull txt
+        if isNull txt then
             raise <| new ArgumentException("Pas de texte fourni en paramètre")
         let parties = txt.Split [|','|]
         let (succesX, x) = Double.TryParse parties.[0]
@@ -272,18 +274,18 @@ type Television =
 
     member this.Allume () =
         printfn "Télévision allumé - cerveau éteint."
-        this.m_allume = true
+        this.m_allume
 
     member this.Eteint () =
         printfn "Télévision éteinte - cerveau rallumé."
-        this.m_allume = false
+        not this.m_allume
 
     (* Il est conseillé d'utiliser des tuples pour regrouper
     les valeurs dans un tuple car l'application partielle n'est supportée
     que par F#
     *)
     member this.ChangeChaine (canal:int) =
-        if this.m_allume = false then
+        if not this.m_allume then
             failwith "Euh comment changer une chaine quand la télé est éteinte ?!"
         printfn "La chaîne %d va changer..." this.m_chaine
         this.m_chaine <- canal
@@ -301,8 +303,9 @@ type ClasseSingleton private () =
     //static let tab:ClasseSingleton [] = Array.singleton (ClasseSingleton())
     static let tab2:ClasseSingleton [] = [|null|]
     static member private Add () = tab2.[0] <- ClasseSingleton()
-    static member GetInstance () = 
-        if tab2.[0] = null then 
+    static member GetInstance () =
+        // refactrorisation F#4
+        if isNull tab2.[0] then
             ClasseSingleton.Add ()
             printfn "Nouvelle instance ajoutée"
         else printfn "Instance déjà présente"
@@ -329,7 +332,7 @@ type Rubis private (poids, brillance) =
     member this.Brillance = m_brillance
 
     // Surcharge
-    public new () = 
+    public new () =
         let rng = new Random()
         let poids = float (rng.Next () % 100) * 0.01
         let brillance = float (rng.Next () % 100) + 0.1
@@ -338,7 +341,7 @@ type Rubis private (poids, brillance) =
     public new (carat) =
         new Rubis(carat, (new Random()).Next () % 100 |> float |> (*) 0.01)
 
-(* 
+(*
 Les fichiers signature en F# : se reporter aux fichiers ClasseEtSignature.fsi
 et ClassesEtSignature.fs. A noter: il convient d'abord d'ouvrir le fichier signature FSI
 puis le fichier source FS
@@ -360,7 +363,7 @@ type ClasseFille(champs1, champs2) =
     member this.Champs2 = champs2
     member this.Champs1 = this.m_champs1
 
-    member this.PrintValues = printfn "Valeurs : %d (directement de la classe mère) et %d de la classe fille" 
+    member this.PrintValues = printfn "Valeurs : %d (directement de la classe mère) et %d de la classe fille"
                                        this.Champs1 this.Champs2
 
 // classe fille avec constructeur explicite
@@ -378,7 +381,7 @@ type ClasseFilleExplicite =
 
     member this.Champs2 = this.m_champs2
 
-    member this.PrintValues = printfn "Valeurs : %d (directement de la classe mère) et %d de la classe fille" 
+    member this.PrintValues = printfn "Valeurs : %d (directement de la classe mère) et %d de la classe fille"
                                        this.Champs1 this.Champs2
 
 let fille = new ClasseFilleExplicite(1, 2);;
@@ -398,7 +401,7 @@ type Sandwich() =
     abstract Calories : int<calories>
     default this.Calories = 0<calories>
 
-type BLTSandwich() = 
+type BLTSandwich() =
     inherit Sandwich()
 
     override this.Ingredients = ["Bacon";"Laitue";"Tomate"]
@@ -411,7 +414,7 @@ type DGSandwich() =
     override this.Calories = 330<calories>
 
 // maintenant on dérive de BLTSandwich une sous-classe
-type BLTCSandwich() = 
+type BLTCSandwich() =
     inherit BLTSandwich()
 
     override this.Ingredients = "Cornichons" :: base.Ingredients
@@ -419,14 +422,34 @@ type BLTCSandwich() =
 
 // Comment écrire une classe abstraite ?
 [<AbstractClass>]
-type ClasseAbstraite() = 
+type ClasseAbstraite() =
     member this.Alpha () = true
     abstract member Bravo : unit -> bool
 
-type ClasseAbstraiteFille() = 
+type ClasseAbstraiteFille() =
     inherit ClasseAbstraite()
 
     override this.Bravo () = false
 
 let caf = new ClasseAbstraiteFille();;
 caf.Bravo ();;
+
+// Les classes scellées
+[<Sealed>]
+type ClasseScellee() =
+    member this.Alpha () = true
+
+(* l'héritage est impossible :
+type ClasseFilleScelleeBug() =
+        inherit ClasseScellee()
+        member this.Beta () = false;
+
+ en revanche l'instanciation est possible
+*)
+
+type ClasseFilleScelleeInstanciee()=
+        static member Resultat () =
+            let classeScellee = new ClasseScellee()
+            printfn "La valeur du booléen de la classe scellée est %A" (classeScellee.Alpha ())
+
+ClasseFilleScelleeInstanciee.Resultat ();;
