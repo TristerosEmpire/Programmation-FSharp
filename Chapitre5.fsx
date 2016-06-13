@@ -481,3 +481,16 @@ let steveAsObject2 = steveAsChien :> Object;;
 // Casting dynamique : conversion du haut vers le bas dans l'arbre de l'héritage
 let steveAsChienFromObj = steveAsObject :?> Chien
 steveAsChienFromObj.Famille
+
+// cast et pattern matching
+open System;;
+let checkType (objet:obj) =
+    match objet with
+    | :? string as s-> printfn "L'objet est de type string et a pour valeur %A" objet
+    | :? int as i -> printfn "L'objet est de type int et a pour valeur %A" objet
+    | _ -> printfn "L'objet est de type %s et a pour valeur %A" (objet.GetType().Name) (objet.ToString ())
+
+let v1 = 45.5;;
+checkType v1;;
+let v2 = 42;;
+checkType v2;;

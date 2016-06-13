@@ -6,4 +6,4 @@ Les différents codes sources présentés ici sont des reprises et des essais co
 - :ok: chapitre 2 (*Chapitre2.fsx*)
 - :ok: chapitre 3 (*Chapitre3.fsx*)
 - :ok: chapitre 4 (*Chapitre4.fsx*)
-- :arrow_forward: chapitre 5 (en cours : *Chapitre5.fsx*, *ClasseEtSignature.fs*, *ClasseEtSignature.fsi*)
+- :ok: chapitre 5 (*Chapitre5.fsx*, *ClasseEtSignature.fs*, *ClasseEtSignature.fsi*)
