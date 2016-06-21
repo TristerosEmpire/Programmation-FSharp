@@ -82,3 +82,69 @@ type Truc() =
 let truc = new Truc();;
 (truc :> IFaireUnTruc).FaitLeTruc ();;
 (truc :> IHeriteDeFaitUnTruc).FaitUnTrucNouveau ();;
+
+// Expression d'objets pour interfaces
+type Personne = 
+    {
+        Prenom : string; Nom :string 
+    }
+    override this.ToString() = sprintf "%s, %s" this.Nom this.Prenom
+
+let groupe = new List<_> (
+                            [|
+                                {Prenom = "Greg"; Nom="Gamma"}
+                                {Prenom = "Alice"; Nom="Alpha"}
+                                {Prenom = "Bob" ; Nom="Beta"}
+                            |]
+)
+
+let printPersonne () = Seq.iter (fun personne -> printfn "%s\n" (personne.ToString ())) groupe
+printPersonne ()
+printfn "Tri initial sur les prénoms : "
+groupe.Sort(
+    {
+        new IComparer<Personne> with
+            member this.Compare(l, r) =
+                if l.Prenom > r.Prenom then   1
+                elif l.Prenom = r.Prenom then 0
+                else                         -1
+     }
+)
+printfn "Résultat : "
+printPersonne ()
+
+printfn "Nouveau tri sur les noms :"
+groupe.Sort(
+    {
+        new IComparer<Personne> with
+            member this.Compare(l, r) =
+                if l.Nom > r.Nom then   1
+                elif l.Nom = r.Nom then 0
+                else                   -1
+    }
+)
+printfn "Résultat :"
+printPersonne ()
+
+// Expressions d'objets et classes dérivées
+[<AbstractClass>]
+type Sandwich() =
+    abstract member Ingredients : string list
+    abstract member Calories : int
+
+// création d'un objet via une expression d'objet:
+let dejeuner = {
+    new Sandwich() with
+        member this.Ingredients = ["Jambon"; "Beurre"]
+        member this.Calories = 400
+}
+dejeuner.Ingredients
+
+// Méthodes d'extension 
+
+
+// (1024).ToHexString()
+// ne fonctionne pas donc on va étendre le module :
+
+type System.Int32 with
+    member this.ToHexString () = sprintf "0x%x" this
