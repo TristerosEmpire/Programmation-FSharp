@@ -148,3 +148,74 @@ dejeuner.Ingredients
 
 type System.Int32 with
     member this.ToHexString () = sprintf "0x%x" this
+
+
+// Etendre les modules
+
+module List =
+    let rec skip n liste = 
+        match n, liste with
+        | _, [] ->    []
+        | 0, liste -> liste
+        | n, x::xs -> skip (n-1) xs
+
+module Seq =
+    let rec reverse (s: seq<'a>) =
+        let stack = new Stack<'a>()
+        s |> Seq.iteri stack.Push
+        seq {
+                while stack.Count > 0 do
+                        yield stack.Pop ()
+            }
+
+// ENUMERATIONS 
+
+// -> Création
+type PieceEchec =
+    | Vide = 0
+    | Pion = 1
+    | Cavalier = 3
+    | Fou = 4
+    | Tour = 5
+    | Reine = 8
+    | Roi = 1000000
+
+// -> Utilisation
+int PieceEchec.Cavalier;;
+
+let creationEchiquier () =
+    // création échiquier vide
+    let echiquier = Array2D.init 8 8 ( fun _ _ -> PieceEchec.Pion)
+    // placement des pièces
+    for i = 0 to 7 do
+        echiquier.[1,i] <- PieceEchec.Pion
+        echiquier.[6,i] <- enum<PieceEchec> (-1* int PieceEchec.Pion)
+
+    // placement des pièces noires
+    [|PieceEchec.Tour; PieceEchec.Cavalier; PieceEchec.Fou; 
+    PieceEchec.Reine; PieceEchec.Roi; PieceEchec.Fou; 
+    PieceEchec.Cavalier; PieceEchec.Tour|] |> Array.iteri (fun index piece -> echiquier.[0, index] <- piece)
+
+    //placement des blancs
+    [|PieceEchec.Tour; PieceEchec.Cavalier; PieceEchec.Fou; 
+    PieceEchec.Roi; PieceEchec.Reine; PieceEchec.Fou; 
+    PieceEchec.Cavalier; PieceEchec.Tour|] |> Array.iteri 
+                (fun index piece -> echiquier.[7, index] <- enum<PieceEchec>(-1 * int piece))
+
+    // retourne l'échiquier
+    echiquier
+
+let isPion piece =
+    match piece with
+    | PieceEchec.Pion -> true
+    | _               -> false
+
+let isPion2 (piece:PieceEchec) =
+    match int piece with
+    | 1 -> true
+    | -1 -> true
+    | _ -> false
+
+let pieceInvalide = enum<PieceEchec> (42)
+System.Enum.IsDefined(typeof<PieceEchec>, pieceInvalide)
+System.Enum.IsDefined(typeof<PieceEchec>, PieceEchec.Roi)
