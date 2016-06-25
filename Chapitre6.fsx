@@ -219,3 +219,47 @@ let isPion2 (piece:PieceEchec) =
 let pieceInvalide = enum<PieceEchec> (42)
 System.Enum.IsDefined(typeof<PieceEchec>, pieceInvalide)
 System.Enum.IsDefined(typeof<PieceEchec>, PieceEchec.Roi)
+
+// Structs
+
+// -> Création
+// avec l'attribut [<Struct>]
+[<Struct>]
+type StructPrixTuring (nom: string, annee: int)=
+    member this.Nom = nom
+    member this.Annee = annee
+    override this.ToString () = sprintf "%s, prix décerné en %d" this.Nom this.Annee
+
+// avec les mots struct ... end
+
+type StructLivre (livre: string, page: int) =
+    struct
+        member this.Livre = livre
+        member this.Page = page
+        override this.ToString () = sprintf "%A : %d pages" this.Livre this.Page
+    end
+
+// -> Initialisation
+let livre1 = new StructLivre("Programming in F#", 473)
+let livreNul = new StructLivre()
+
+livre1.ToString ()
+livreNul.ToString ()
+
+// Mutabilité
+[<Struct>]
+type StructMarquePage =
+    val mutable livre : string
+    val mutable page : int
+
+    override this.ToString () =
+        sprintf "Pause en page %d du livre %A" this.page this.livre
+
+let mutable progression1 = new StructMarquePage()
+progression1.livre <- "Proramming in F#"
+progression1.page <- 180
+progression1.ToString ();;
+
+// en revanche sans mutable :
+// let progression2 = new StructMarquePage()
+// progression2.livre <- "blahblah" impossible
