@@ -61,7 +61,7 @@ let convertionString s =
     | ToFloat resultat3 -> printfn "%s est un booléen ayant pour valeur %f" s resultat3
     | _                 -> printfn "%s est d'un type inconnu" s
 
-// Active Patterns paramétrés
+// Active Patterns paramétrés: utilise toujours le type option
 
 let (|RegexMatch3|_|) (pattern:string) (input:string) =
     let result = Regex.Match (input,pattern)
@@ -82,15 +82,18 @@ let parseTime input =
 
 // Active Patterns à cas multiples
 
-let (|Pair|Impair|) entier = if entier % 2 = 0 then Pair else Impair
+let (|Pair|Impair|) entier = 
+    match (entier % 2) with
+    |  0 -> Pair
+    | _  -> Impair
 
-let estPaire valeur =
+let estPair valeur =
     match valeur with
     | Pair v -> true
     | _ -> false
 
-let estImpaire valeur =
-    not (estPaire valeur)
+let estImpair valeur =
+    not (estPair valeur)
 
 let (|Positif|Negatif|Zero|) input =
     if input >  0 then Positif
@@ -102,3 +105,19 @@ let controleEtat input =
     | Positif input -> printfn "Valeur positive."
     | Negatif input -> printfn "Valeur négative."
     | Zero input    -> printfn "La valeur est égale à zéro."
+
+let (|Repertoire|Fichier|Autre|) (input:string) =
+
+    let d = new DirectoryInfo(input)
+    let f = new FileInfo(input)
+
+    match input with
+    | _ when d.Exists -> Repertoire d
+    | _ when f.Exists -> Fichier f
+    | _ -> Autre
+
+let verifFichier input =
+    match input with
+    | Repertoire obj -> printfn "%A est un répertoire (créé le %A)" obj.Name obj.CreationTime
+    | Fichier obj -> printfn "%A est un fichier" obj.Name
+    | Autre -> printfn "Autre"
