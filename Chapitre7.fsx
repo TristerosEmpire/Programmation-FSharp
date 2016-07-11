@@ -121,3 +121,84 @@ let verifFichier input =
     | Repertoire obj -> printfn "%A est un répertoire (créé le %A)" obj.Name obj.CreationTime
     | Fichier obj -> printfn "%A est un fichier" obj.Name
     | Autre -> printfn "Autre"
+
+//-------------------------------------------
+(*
+ on peut utiliser les OU logiques | et ET logiques & avec les AP dans le pattern matching : COMBINAISON 
+ ou on peut utiliser les AP en les imbriquant : reprise du code complet
+*)
+#r "System.Xml.dll"
+open System.Xml
+
+// filtre un élément XML avec un AP partiel paramétré
+let (|Elem|_|) nom (entree:XmlNode) =
+    if entree.Name = nom then Some(entree)
+    else None
+
+// récupère les attributs d'un élément avec un AP à cas simple
+let (|Attributs|) (entree: XmlNode) = entree.Attributes
+
+// filtre un attribut générique avec un AP à cas simple et paramétré
+let (|Attr|) nomAttribut (entree: XmlAttributeCollection) = 
+    match entree.GetNamedItem(nomAttribut) with
+    | null -> failwithf "Attribut %A non trouvé." nomAttribut
+    | attr -> attr.Value
+
+// ce que nous allons parser 
+type Part = 
+    | Widget of float
+    | Sprocket of string*int
+
+let ParseXmlNode element = 
+    match element with
+    | Elem "Widget" xmlElement ->
+        match xmlElement with
+        | Attributs xmlElementAttributs ->
+            match xmlElementAttributs with
+            | Attr "Diametre" diametre
+                -> Widget (float diametre)
+    // version alternative sans aucun doute plus clair et plus efficace :
+    //| Elem "Widget" (Attributs (Attr "Diametre" diametre)) -> Widget (float diametre)
+    | Elem "Sprocket" (Attributs (Attr "Modele" modele & Attr "NumeroSerie" ns))
+        -> Sprocket (modele, (int ns))
+    | _ -> failwith "Elément inconnu"
+
+let xmlDoc = 
+    let doc  = new System.Xml.XmlDocument();
+    let txtXML = "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+        <Parts>
+            <Widget Diametre='5.0' />
+            <Sprocket Modele='A' NumeroSerie='147' />
+            <Sprocket Modele='B' NumeroSerie='302' />
+        </Parts>"
+    doc.LoadXml(txtXML)
+    doc
+
+xmlDoc.DocumentElement.ChildNodes |> Seq.cast<XmlElement> |> Seq.map ParseXmlNode;;
+
+//-------------------------------------------
+
+// Le shadowing intentionnel
+// Rappel :
+let testShadow() =
+    let x = 'a';
+    let y = x;
+    let x = "chaine";
+    let x = 42;
+    (x,y)
+
+// dépassement arithmétique
+let valeurMax = System.Int32.MaxValue
+valeurMax + 1
+// shadowing en utilisant le module Checked
+open Checked
+valeurMax + 1
+
+// controle de l'usage des modules : [<RequireQualifiedAccess>]
+[<RequireQualifiedAccess>]
+module Truc =
+    let valeur1 = 1
+
+[<RequireQualifiedAccess>]
+module Bidule = 
+    let valeur1 = 2
