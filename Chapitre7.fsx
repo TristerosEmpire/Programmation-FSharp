@@ -202,3 +202,30 @@ module Truc =
 [<RequireQualifiedAccess>]
 module Bidule = 
     let valeur1 = 2
+
+// MAITRISE DES LISTES NON-MUTABLES
+// (::) vs (@) : https://blogs.msdn.microsoft.com/chrsmith/2008/07/10/mastering-f-lists/
+// on veut filtrer une liste où des éléments consécutifs ne peuvent pas être similaires 
+// fold et @ : faible perfs
+let listeUnique1 liste = 
+
+    let fonctionPliage acc item = 
+        let dernier, listeNDup = acc
+        match dernier with
+        | None -> Some(item), [item]
+        | Some(valeur) when valeur = item -> Some(valeur), listeNDup
+        | Some(valeur) -> Some(item), listeNDup @ [item]
+    
+    let (_, listeNonDupliquee) = List.fold fonctionPliage (None, []) liste
+    listeNonDupliquee
+
+// foldBack et :: : meilleures performances et un code bien plus léger et lisible
+let listeUnique2 liste =
+
+    let fonctionPliage item acc = 
+        match acc with 
+        | [] -> [item]
+        | x::xs when x <> item -> item :: acc
+        | x::xs -> acc
+    
+    List.foldBack fonctionPliage liste []
