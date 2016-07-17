@@ -229,3 +229,24 @@ let listeUnique2 liste =
         | x::xs -> acc
     
     List.foldBack fonctionPliage liste []
+
+(* RAPPEL : signatures de List.fold et List.foldBack
+ ---> fold ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
+ application sur la liste de gauche à droite
+
+ ---> foldBack ('a -> 'b -> 'a) -> 'a list -> 'b -> 'b
+ application sur la liste de droite à gauche
+*)
+
+// le code précédent est bien plus élégant qu'une structure comme suit :
+
+let supprimeDuplicatas liste =
+    let rec aux x xs lst =
+        match xs with
+        | y::ys when x <> y -> aux y ys (y::lst)
+        | y::ys             -> aux y ys lst
+        | y::[] when x <> y -> y::lst
+        | y::[]             -> lst
+        | []                -> lst
+    let (premier, queue) = (List.head liste, List.tail liste)
+    aux premier queue [premier] |> List.rev
