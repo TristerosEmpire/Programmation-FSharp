@@ -250,3 +250,23 @@ let supprimeDuplicatas liste =
         | []                -> lst
     let (premier, queue) = (List.head liste, List.tail liste)
     aux premier queue [premier] |> List.rev
+
+// RECURSION TERMINALE
+
+// stack overflow avec creationListeCrash 100000000
+let creationListeCrash (valeurMax) =
+    let rec createList (i:int) (max:int) =
+        if i = max then
+            []
+        else i::createList (i+1) max
+    createList 0 valeurMax
+
+// aucun crash, aucune erreur.
+let creationListeSansCrash(valeurMax) =
+    let rec aux tableau zero depart =
+        if zero = depart then
+            tableau
+        else
+            aux ((depart-1)::tableau) zero (depart-1)
+
+    aux [] 0 valeurMax
