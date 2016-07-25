@@ -270,3 +270,26 @@ let creationListeSansCrash(valeurMax) =
             aux ((depart-1)::tableau) zero (depart-1)
 
     aux [] 0 valeurMax
+
+// factorielle avec problème :
+let rec factorielle x =
+    match x with
+    | _ when x <= 1 -> 1
+    | _ -> x * factorielle (x-1)
+
+
+// factorielle avec récursion terminale
+let rec factorielleRT x =
+    match x with
+    | _ when x <= 1 -> 1
+    | _ -> let calcul = factorielleRT (x-1)
+           let rslt = x * calcul
+           rslt
+
+// récursion terminale avec accumulateur
+let factorielleRT2 x =
+    let rec aux valeur acc =
+        match valeur with
+        | _ when x <= 1 -> 1
+        | _ -> aux (valeur-1) (acc*valeur)
+    aux x 1
