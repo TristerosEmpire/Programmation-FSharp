@@ -293,3 +293,36 @@ let factorielleRT2 x =
         | _ when x <= 1 -> 1
         | _ -> aux (valeur-1) (acc*valeur)
     aux x 1
+
+// Continuations
+let decompte liste =
+    let rec decompteTR lst continuation =
+        match lst with
+        | []    -> continuation ()
+        | x::xs -> decompteTR xs (fun () -> printf "%d " x 
+                                            continuation ())
+    decompteTR liste (fun () -> printfn "Fin !")
+
+// continuation : arbre binaire et iteration
+type EtapeContinuation<'a> =
+    | Finished 
+    | Etape of 'a * (unit -> EtapeContinuation<'a>)
+
+type Arbre<'a> =
+    | Empty
+    | Node of Arbre<'a> * 'a * Arbre<'a>
+
+let iter fonction arbreBinaire =
+    let rec linearise arbre continuation =
+        match arbre with
+        | Empty -> continuation ()
+        | Node (g,v,d) -> Etape( v, (fun () -> linearise g (fun () -> linearise d continuation)))
+
+    let etapes  = linearise arbreBinaire (fun () -> Finished)
+
+    let rec traiteEtapes etape =
+        match etape with
+        | Finished -> ()
+        | Etape(v, suite) -> fonction v
+                             traiteEtapes (suite ())
+    traiteEtapes etapes
