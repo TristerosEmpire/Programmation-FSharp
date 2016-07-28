@@ -326,3 +326,13 @@ let iter fonction arbreBinaire =
         | Etape(v, suite) -> fonction v
                              traiteEtapes (suite ())
     traiteEtapes etapes
+
+// PROGRAMMER AVEC LES FONCTIONS
+
+// l'application partielle de fonction : les fonctions passées en argument
+let f1 x = x + 1;
+let f2 x = x + 1;
+let f3 x = x + 1;
+
+let l = [1,2,3,4];
+List.map (fun x -> f3 f2 f1 x) l;
