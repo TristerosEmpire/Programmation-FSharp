@@ -330,9 +330,18 @@ let iter fonction arbreBinaire =
 // PROGRAMMER AVEC LES FONCTIONS
 
 // l'application partielle de fonction : les fonctions passées en argument
-let f1 x = x + 1;
-let f2 x = x + 1;
-let f3 x = x + 1;
+let fctSimple x = x + 1
+let liste = [1;2;3;4]
 
-let l = [1,2,3,4];
-List.map (fun x -> f3 f2 f1 x) l;
+List.map (fun x-> fctSimple x) liste;;
+List.map fctSimple liste;;
+
+let f0 b c d x = b ( c (d x));;
+
+let f1 x = x + 1
+let f2 x = x + 2
+let f3 x = x + 3
+
+List.map (fun x -> f0 f1 f2 f3 x) liste;;
+
+List.map (f0 f1 f2 f3) liste;;
