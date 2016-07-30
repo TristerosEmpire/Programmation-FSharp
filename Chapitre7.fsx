@@ -345,3 +345,31 @@ let f3 x = x + 3
 List.map (fun x -> f0 f1 f2 f3 x) liste;;
 
 List.map (f0 f1 f2 f3) liste;;
+
+//Code redondant : utilisation des fonctions d'ordre supérieur
+[<Measure>]
+type euro
+
+type Entree = {
+    Nom: string;
+    Prix: float<euro>;
+    Calories: int}
+
+let leMoinsCher menu = 
+    List.reduce (fun acc item -> if item.Prix < acc.Prix then item
+                                 else acc) menu
+
+let leMoinsCalorique menu =
+    List.reduce (fun acc item -> if item.Calories < acc.Calories then item
+                                 else acc) menu
+
+// réduction de la redondance des deux fonctions :
+let prendItem fct menu =
+    let reduction acc item =
+        match fct acc item with
+        | true -> acc
+        | false -> item
+    List.reduce reduction menu
+
+let leMoinsCher2 = prendItem (fun acc item -> item.Prix < acc.Prix)
+let leMoinsCalorique2 = prendItem (fun acc item -> item.Calories < acc.Calories) 
