@@ -1,7 +1,8 @@
 ﻿// PROGRAMMATION FONCTIONNELLE APPLIQUEE
 open System
 open System.IO
-open System.Text.RegularExpressions;
+open System.Text.RegularExpressions
+open System.Collections.Generic
 
 // ACTIVE PATTERNS
 // Cas simple :
@@ -373,3 +374,60 @@ let prendItem fct menu =
 
 let leMoinsCher2 = prendItem (fun acc item -> item.Prix < acc.Prix)
 let leMoinsCalorique2 = prendItem (fun acc item -> item.Calories < acc.Calories) 
+
+// Closures/Fermetures
+//ex simple :
+let mult liste valeur = List.map (fun x -> x * valeur) liste;;
+
+//ex complexe :
+type Set = 
+    {
+        Ajoute : int -> Set;
+        Existe : int -> bool;
+    }
+
+    static member Vide =
+        let rec creeSet liste =
+            {
+                Ajoute = (fun item -> creeSet (item :: liste))
+                Existe = (fun item -> List.exists ((=) item) liste)
+            }
+        creeSet []
+
+let s = Set.Vide
+let s' = s.Ajoute 1
+let s'' = s'.Ajoute 2
+let s''' = s''.Ajoute 3;;
+
+s.Existe 2;;
+s''.Existe 2;;
+
+// MOTIFS FONCTIONNELS
+// Mémoïsation
+
+let memoise (f : 'a -> 'b) =
+    let dictionnaire = new Dictionary<'a, 'b>()
+    let fonctionMemoisation (entree: 'a) : 'b =
+        match dictionnaire.TryGetValue(entree) with
+        | true, x -> x
+        | false, _ ->
+                     // évalue et ajoute le résultat dans le dictionnaire
+                    let resultat = f entree
+                    dictionnaire.Add(entree, resultat)
+                    resultat
+    fonctionMemoisation
+
+let dodo x = 
+    System.Threading.Thread.Sleep(x * 1000)
+    x
+
+#time;;
+
+dodo 5;;
+dodo 5;;
+
+// mémoïsation de la fonction dodo
+let dodoMemoise = memoise dodo;;
+
+dodoMemoise 5;;
+dodoMemoise 5;;
