@@ -431,3 +431,41 @@ let dodoMemoise = memoise dodo;;
 
 dodoMemoise 5;;
 dodoMemoise 5;;
+
+// mémoïsation et fonctions récursives
+let mauvaiseFacon =
+    let rec fib x =
+        match x with
+        | 0 | 1 -> 1
+        | 2     -> 2
+        | n     -> fib (n-1) + fib (n-2)
+    memoise fib
+
+let rec bonneFacon =
+    let fib x = 
+        match x with
+        | 0 | 1 -> 1
+        | 2     -> 2
+        | n     -> bonneFacon (n-1) + bonneFacon (n-2)
+    memoise fib
+
+// valeurs fonction mutables
+type Widget = 
+    | Truc   of string * int
+    | Bidule of string * float
+     
+let mutable genereWidget = 
+    let compteur = ref 0
+    (fun () -> incr compteur
+               Truc ((sprintf "Modèle Truc1-%d" !compteur), !compteur));;
+genereWidget ();;
+genereWidget ();;
+
+// Mise à jour du générateur
+genereWidget <-
+    let compteur = ref 0
+    (fun () -> incr compteur
+               Bidule((sprintf "Modèle Bidule%d" !compteur), 0.0))
+
+genereWidget ();;
+genereWidget ();;
