@@ -469,3 +469,41 @@ genereWidget <-
 
 genereWidget ();;
 genereWidget ();;
+
+// Programmation paresseuse
+
+// -> réduction de l'utilisation de la mémoire
+type ArbreParesseux<'a> = 
+    | Empty
+    | Node of 'a * ArbreParesseux<'a> Lazy * ArbreParesseux<'a> Lazy
+
+let rec map f arbre =
+    match arbre with 
+    | Empty -> Empty
+    | Node (x, g, d) ->
+        Node(
+            f x,
+            lazy(
+                map f (g.Value)
+            ),
+            lazy(
+                map f (d.Value)
+            )
+        )
+
+// -> accès aux données paresseux : 
+let traitementFichier (chemin: string) =
+    seq {
+        use lectureFichier = new StreamReader(chemin)
+
+        // on évite la première ligne du fichier CSV
+        lectureFichier.ReadLine() |> ignore
+
+        while not lectureFichier.EndOfStream do
+            let ligne = lectureFichier.ReadLine()
+            yield ligne.Split( [|','|] )
+    }
+let root = @"/home/patrice"
+let fichiers = Directory.GetFiles(root, "*.csv")
+
+let tousLesCSV = fichiers |> Seq.map traitementFichier |> Seq.concat
