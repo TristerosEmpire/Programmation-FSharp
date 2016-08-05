@@ -3,6 +3,7 @@ open System
 open System.IO
 open System.Text.RegularExpressions
 open System.Collections.Generic
+open System.Net
 
 // ACTIVE PATTERNS
 // Cas simple :
@@ -507,3 +508,58 @@ let root = @"/home/patrice"
 let fichiers = Directory.GetFiles(root, "*.csv")
 
 let tousLesCSV = fichiers |> Seq.map traitementFichier |> Seq.concat
+
+// Structures de données fonctionnelles :
+// -> Set<_>
+// récupération du texte à lire
+let getHTML (url: string) =
+    let requete = WebRequest.Create(url)
+    let reponse = requete.GetResponse ()
+    use stream = reponse.GetResponseStream()
+    use reader = new StreamReader(stream)
+
+    reader.ReadToEnd ()
+
+//création d'une lise de mots uniques
+let motsUniques (texte: string) =
+    let mots = texte.Split( [|' '|], StringSplitOptions.RemoveEmptyEntries)
+
+    let motsUniques =
+        Array.fold 
+                    (fun (acc:Set<string>) (mot:string) -> Set.add mot acc)
+                    Set.empty
+                    mots
+
+    motsUniques
+
+let frankenstein = "http://www.gutenberg.org/files/84/84.txt"
+let resultats = frankenstein |> getHTML |> motsUniques
+Set.count resultats
+
+// Map fonctionnel
+
+let occurrencesMots (texte: string) =
+    let mots = texte.Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
+
+    let frequenceMots =
+        Array.fold  (fun (acc:Map<string, int>) (mot: string) -> 
+            if acc.ContainsKey mot then
+                let utilisationMot = acc.[mot]
+                Map.add mot (utilisationMot+1) acc
+            else
+                Map.add mot 1 acc)
+                    Map.empty
+                    mots
+    frequenceMots
+
+let afficheTop20 (frequences : Map<string, int>) =
+       
+       let top20 =
+            frequences |> Map.toSeq |> Seq.sortBy (fun (mot, occurrences) -> -occurrences) |> Seq.take 20
+       
+       printfn "Top 20 des mots les plus utilisés :"
+
+       top20 |> Seq.iteri 
+             (fun index (mot, occurrences) -> printfn "%d\t '%s' a été utilisé %d fois." index mot occurrences)
+
+frankenstein |> getHTML |> occurrencesMots |> afficheTop20
