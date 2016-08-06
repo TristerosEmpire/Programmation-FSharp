@@ -69,13 +69,15 @@ let (|RegexMatch3|_|) (pattern:string) (input:string) =
     let result = Regex.Match (input,pattern)
     if result.Success then
         match (List.tail [for g in result.Groups -> g.Value]) with
+        // surtout ne pas refactoriser sur le conseil du Linter le pattern
+        // suivant en fst::snd::[trd]
         | fst::snd::trd::[] -> Some (fst, snd, trd)
         | [] -> failwith <| "Match réussi mais aucun groupe n'a été trouvé.\nUtiliser (.*) pour capturer des groupes."
         | _ -> failwith "Match réussi mais n'a pas trouver exactement ces groupes."
         else
             None
 
-let parseTime input = 
+let parseTime input =
     match input with
     | RegexMatch3 "(\d+)/(\d+)/(\d\d\d\d)" (month, day, year)
     | RegexMatch3 "(\d\d\d\d)-(\d+)-(\d+)" (year, month, day)
@@ -84,7 +86,7 @@ let parseTime input =
 
 // Active Patterns à cas multiples
 
-let (|Pair|Impair|) entier = 
+let (|Pair|Impair|) entier =
     match (entier % 2) with
     |  0 -> Pair
     | _  -> Impair
@@ -126,7 +128,7 @@ let verifFichier input =
 
 //-------------------------------------------
 (*
- on peut utiliser les OU logiques | et ET logiques & avec les AP dans le pattern matching : COMBINAISON 
+ on peut utiliser les OU logiques | et ET logiques & avec les AP dans le pattern matching : COMBINAISON
  ou on peut utiliser les AP en les imbriquant : reprise du code complet
 *)
 #r "System.Xml.dll"
@@ -141,17 +143,17 @@ let (|Elem|_|) nom (entree:XmlNode) =
 let (|Attributs|) (entree: XmlNode) = entree.Attributes
 
 // filtre un attribut générique avec un AP à cas simple et paramétré
-let (|Attr|) nomAttribut (entree: XmlAttributeCollection) = 
+let (|Attr|) nomAttribut (entree: XmlAttributeCollection) =
     match entree.GetNamedItem(nomAttribut) with
     | null -> failwithf "Attribut %A non trouvé." nomAttribut
     | attr -> attr.Value
 
-// ce que nous allons parser 
-type Part = 
+// ce que nous allons parser
+type Part =
     | Widget of float
     | Sprocket of string*int
 
-let ParseXmlNode element = 
+let ParseXmlNode element =
     match element with
     | Elem "Widget" xmlElement ->
         match xmlElement with
@@ -165,7 +167,7 @@ let ParseXmlNode element =
         -> Sprocket (modele, (int ns))
     | _ -> failwith "Elément inconnu"
 
-let xmlDoc = 
+let xmlDoc =
     let doc  = new System.Xml.XmlDocument();
     let txtXML = "<?xml version=\"1.0\" encoding=\"utf-8\"?>
         <Parts>
@@ -202,34 +204,34 @@ module Truc =
     let valeur1 = 1
 
 [<RequireQualifiedAccess>]
-module Bidule = 
+module Bidule =
     let valeur1 = 2
 
 // MAITRISE DES LISTES NON-MUTABLES
 // (::) vs (@) : https://blogs.msdn.microsoft.com/chrsmith/2008/07/10/mastering-f-lists/
-// on veut filtrer une liste où des éléments consécutifs ne peuvent pas être similaires 
+// on veut filtrer une liste où des éléments consécutifs ne peuvent pas être similaires
 // fold et @ : faible perfs
-let listeUnique1 liste = 
+let listeUnique1 liste =
 
-    let fonctionPliage acc item = 
+    let fonctionPliage acc item =
         let dernier, listeNDup = acc
         match dernier with
         | None -> Some(item), [item]
         | Some(valeur) when valeur = item -> Some(valeur), listeNDup
         | Some(valeur) -> Some(item), listeNDup @ [item]
-    
+
     let (_, listeNonDupliquee) = List.fold fonctionPliage (None, []) liste
     listeNonDupliquee
 
 // foldBack et :: : meilleures performances et un code bien plus léger et lisible
 let listeUnique2 liste =
 
-    let fonctionPliage item acc = 
-        match acc with 
+    let fonctionPliage item acc =
+        match acc with
         | [] -> [item]
         | x::xs when x <> item -> item :: acc
         | x::xs -> acc
-    
+
     List.foldBack fonctionPliage liste []
 
 (* RAPPEL : signatures de List.fold et List.foldBack
@@ -247,8 +249,8 @@ let supprimeDuplicatas liste =
         match xs with
         | y::ys when x <> y -> aux y ys (y::lst)
         | y::ys             -> aux y ys lst
-        | y::[] when x <> y -> y::lst
-        | y::[]             -> lst
+        | [y] when x <> y -> y::lst
+        | [y]             -> lst
         | []                -> lst
     let (premier, queue) = (List.head liste, List.tail liste)
     aux premier queue [premier] |> List.rev
@@ -301,13 +303,13 @@ let decompte liste =
     let rec decompteTR lst continuation =
         match lst with
         | []    -> continuation ()
-        | x::xs -> decompteTR xs (fun () -> printf "%d " x 
+        | x::xs -> decompteTR xs (fun () -> printf "%d " x
                                             continuation ())
     decompteTR liste (fun () -> printfn "Fin !")
 
 // continuation : arbre binaire et iteration
 type EtapeContinuation<'a> =
-    | Finished 
+    | Finished
     | Etape of 'a * (unit -> EtapeContinuation<'a>)
 
 type Arbre<'a> =
@@ -335,7 +337,8 @@ let iter fonction arbreBinaire =
 let fctSimple x = x + 1
 let liste = [1;2;3;4]
 
-List.map (fun x-> fctSimple x) liste;;
+// on pas d'une écriture : List.map (fun x-> fctSimple x) liste;;
+// à ceci : d'ailleurs on aura un Trace depuis Ionide
 List.map fctSimple liste;;
 
 let f0 b c d x = b ( c (d x));;
@@ -350,14 +353,14 @@ List.map (f0 f1 f2 f3) liste;;
 
 //Code redondant : utilisation des fonctions d'ordre supérieur
 [<Measure>]
-type euro
+type Euros
 
 type Entree = {
     Nom: string;
-    Prix: float<euro>;
+    Prix: float<Euros>;
     Calories: int}
 
-let leMoinsCher menu = 
+let leMoinsCher menu =
     List.reduce (fun acc item -> if item.Prix < acc.Prix then item
                                  else acc) menu
 
@@ -374,14 +377,14 @@ let prendItem fct menu =
     List.reduce reduction menu
 
 let leMoinsCher2 = prendItem (fun acc item -> item.Prix < acc.Prix)
-let leMoinsCalorique2 = prendItem (fun acc item -> item.Calories < acc.Calories) 
+let leMoinsCalorique2 = prendItem (fun acc item -> item.Calories < acc.Calories)
 
 // Closures/Fermetures
 //ex simple :
 let mult liste valeur = List.map (fun x -> x * valeur) liste;;
 
 //ex complexe :
-type Set = 
+type Set =
     {
         Ajoute : int -> Set;
         Existe : int -> bool;
@@ -418,7 +421,7 @@ let memoise (f : 'a -> 'b) =
                     resultat
     fonctionMemoisation
 
-let dodo x = 
+let dodo x =
     System.Threading.Thread.Sleep(x * 1000)
     x
 
@@ -443,7 +446,7 @@ let mauvaiseFacon =
     memoise fib
 
 let rec bonneFacon =
-    let fib x = 
+    let fib x =
         match x with
         | 0 | 1 -> 1
         | 2     -> 2
@@ -451,11 +454,11 @@ let rec bonneFacon =
     memoise fib
 
 // valeurs fonction mutables
-type Widget = 
+type Widget =
     | Truc   of string * int
     | Bidule of string * float
-     
-let mutable genereWidget = 
+
+let mutable genereWidget =
     let compteur = ref 0
     (fun () -> incr compteur
                Truc ((sprintf "Modèle Truc1-%d" !compteur), !compteur));;
@@ -474,12 +477,12 @@ genereWidget ();;
 // Programmation paresseuse
 
 // -> réduction de l'utilisation de la mémoire
-type ArbreParesseux<'a> = 
+type ArbreParesseux<'a> =
     | Empty
     | Node of 'a * ArbreParesseux<'a> Lazy * ArbreParesseux<'a> Lazy
 
 let rec map f arbre =
-    match arbre with 
+    match arbre with
     | Empty -> Empty
     | Node (x, g, d) ->
         Node(
@@ -492,7 +495,7 @@ let rec map f arbre =
             )
         )
 
-// -> accès aux données paresseux : 
+// -> accès aux données paresseux :
 let traitementFichier (chemin: string) =
     seq {
         use lectureFichier = new StreamReader(chemin)
@@ -525,7 +528,7 @@ let motsUniques (texte: string) =
     let mots = texte.Split( [|' '|], StringSplitOptions.RemoveEmptyEntries)
 
     let motsUniques =
-        Array.fold 
+        Array.fold
                     (fun (acc:Set<string>) (mot:string) -> Set.add mot acc)
                     Set.empty
                     mots
@@ -542,7 +545,7 @@ let occurrencesMots (texte: string) =
     let mots = texte.Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
 
     let frequenceMots =
-        Array.fold  (fun (acc:Map<string, int>) (mot: string) -> 
+        Array.fold  (fun (acc:Map<string, int>) (mot: string) ->
             if acc.ContainsKey mot then
                 let utilisationMot = acc.[mot]
                 Map.add mot (utilisationMot+1) acc
@@ -553,13 +556,13 @@ let occurrencesMots (texte: string) =
     frequenceMots
 
 let afficheTop20 (frequences : Map<string, int>) =
-       
+
        let top20 =
             frequences |> Map.toSeq |> Seq.sortBy (fun (mot, occurrences) -> -occurrences) |> Seq.take 20
-       
+
        printfn "Top 20 des mots les plus utilisés :"
 
-       top20 |> Seq.iteri 
+       top20 |> Seq.iteri
              (fun index (mot, occurrences) -> printfn "%d\t '%s' a été utilisé %d fois." index mot occurrences)
 
 frankenstein |> getHTML |> occurrencesMots |> afficheTop20
