@@ -86,18 +86,20 @@ let parseTime input =
 
 // Active Patterns à cas multiples
 
-let (|Pair|Impair|) entier =
+let (|Paire|Impaire|) entier =
     match (entier % 2) with
-    |  0 -> Pair
-    | _  -> Impair
+    |  0 -> Paire
+    | _  -> Impaire
 
-let estPair valeur =
+let estPaire valeur =
     match valeur with
-    | Pair v -> true
+    | Paire v -> true
     | _ -> false
 
-let estImpair valeur =
-    not (estPair valeur)
+let estImpaire valeur =
+    match valeur with
+    | Impaire v -> true
+    | _         -> false
 
 let (|Positif|Negatif|Zero|) input =
     if input >  0 then Positif

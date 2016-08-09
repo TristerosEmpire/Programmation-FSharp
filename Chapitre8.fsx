@@ -27,3 +27,35 @@ type Bouteille(volume: float<ML>) =
     //nul besoin de spécifier comme ci-dessus le type
     static member (-) (bg:Bouteille, bd) =
         new Bouteille(bg.Volume-bd)
+
+// les indexeurs
+let (|CheckIndex|_|) (i:int) = 
+    if i <1 || i > 365 then None
+    else Some i
+
+type Annee(annee: int) =
+    member this.Item(index: int) =
+        match index with
+        | CheckIndex index -> DateTime.Parse(sprintf "1-1-%d" annee).AddDays(float (index-1))
+        | _ -> failwith "Nombre de jours invalide."
+
+let annee = new Annee(2016)
+let jour = annee.[171]
+jour.DayOfWeek, jour.Day, jour.Month
+
+// index utilisant deux paramètres distincts
+type Annee2(annee: int) =
+    member this.Item(mois: string, jour: int) =
+        let moisConverti =
+            match mois.ToLower() with
+            | "janvier" -> 1    | "février" -> 2    | "mars" -> 3
+            | "avril"   -> 4    | "mai"     -> 5    | "juin" -> 6
+            | "juillet" -> 7    | "août"    -> 8    | "septembre" -> 9
+            | "octobre" -> 10   | "novembre"-> 11   | "décembre"-> 12
+            | _ -> failwithf "Mois proposé (%s) n'est pas valide" mois
+        DateTime.Parse(sprintf "1-1-%d" annee).AddMonths(moisConverti - 1).AddDays(float (jour-1))
+
+let a2 = new Annee2(2015)
+let alea = a2.["octobre", 30]
+alea.Day, alea.Month, alea.Year;;
+
