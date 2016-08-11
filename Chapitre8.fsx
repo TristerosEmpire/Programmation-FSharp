@@ -1,5 +1,6 @@
 ﻿// POO APPLIQUEE
 open System
+open System.Collections.Generic
 
 // Surcharge des opérateurs
 [<Measure>]
@@ -59,3 +60,17 @@ let a2 = new Annee2(2015)
 let alea = a2.["octobre", 30]
 alea.Day, alea.Month, alea.Year;;
 
+// indexeurs en lecture et écriture
+type ModificateurDeMots(texte:string) =
+    let lstLettres = new List<char>(texte)
+    member this.Item
+        with get index = lstLettres.[index]
+        and set index nvCaractere = lstLettres.[index] <- nvCaractere
+
+    override this.ToString() =
+        new String(lstLettres.ToArray());;
+
+let jp = new ModificateurDeMots "Jurassic Park"
+jp.[10]
+jp.[10] <- 'o'
+jp.ToString ();;
