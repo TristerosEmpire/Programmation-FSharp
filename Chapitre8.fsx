@@ -74,3 +74,55 @@ let jp = new ModificateurDeMots "Jurassic Park"
 jp.[10]
 jp.[10] <- 'o'
 jp.ToString ();;
+
+// Les slices
+// unidimensionnels
+
+type ListeDeMots(txt :string) =
+    let mots = txt.Split([|' '|])
+    member this.GetSlice (borneINF:int option, borneSUP: int option) =
+        let tableau = 
+            match borneINF, borneSUP with
+            | Some borneINF, Some borneSUP -> mots.[borneINF .. borneSUP]
+            | Some borneINF, None -> mots.[borneINF ..]
+            | None, Some borneSUP -> mots.[.. borneSUP]
+            | None, None -> mots.[*]
+        tableau
+
+        member this.Comptage () = mots.Length
+
+let ldm = new ListeDeMots("Portez ce vieux whisky au juge blond qui fume")
+ldm.[*]
+ldm.Comptage ()
+ldm.[..5]
+ldm.[2..7]
+
+// bidimensionnels
+type Points2D(points: seq<float * float>) =
+    member this.GetSlice (xinf, xsup, yinf, ysup) =
+        let getValue option valeurParDefaut =
+            match option with
+            | Some x -> x
+            | None   -> valeurParDefaut
+        
+        let minX = getValue xinf Double.MinValue
+        let maxX = getValue xsup Double.MaxValue
+
+        let minY = getValue yinf Double.MinValue
+        let maxY = getValue ysup Double.MaxValue
+
+        let intervalle (x,y) = (minX < x && x < maxX && minY < y && y < maxY)
+
+        Seq.filter intervalle points
+
+let points = seq {
+    let alea = new Random()
+    for i=0 to 1000 do
+        let x = alea.NextDouble ()
+        let y = alea.NextDouble ()
+        yield (x,y)
+};;
+points;;
+let ensemblePoints = new Points2D(points)
+ensemblePoints.[0.5 .., 0.5 ..]
+ensemblePoints.[0.9 .. 0.99, *]
