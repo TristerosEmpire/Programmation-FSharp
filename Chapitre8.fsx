@@ -126,3 +126,26 @@ points;;
 let ensemblePoints = new Points2D(points)
 ensemblePoints.[0.5 .., 0.5 ..]
 ensemblePoints.[0.9 .. 0.99, *]
+
+// Contraintes sur les types génériques
+
+exception PasPlusGrand
+
+type PlusGrandQueListe<'a when 'a :> IComparable<'a> >(minVal: 'a, liste: List<'a>) =
+
+    let resultat = new List<'a>()
+
+    member private this.Add (nvItem: 'a)=
+        let ic = nvItem :> IComparable<'a>
+        if ic.CompareTo(minVal) > 0 then 
+            resultat.Add(nvItem)
+        
+    member this.Check () =
+        for i in liste do 
+            this.Add(i)
+
+    member this.Items = resultat
+
+let p = new PlusGrandQueListe<int>(2, new List<int>([1;2;3;3;4;2;1;5;6]))
+p.Check ()
+p.Items 
