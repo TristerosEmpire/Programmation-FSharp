@@ -149,3 +149,40 @@ type PlusGrandQueListe<'a when 'a :> IComparable<'a> >(minVal: 'a, liste: List<'
 let p = new PlusGrandQueListe<int>(2, new List<int>([1;2;3;3;4;2;1;5;6]))
 p.Check ()
 p.Items 
+
+// DELEGUES ET EVENEMENTS
+
+[<Measure>]
+type ml
+
+type TasseDeCafe(volume: float<ml>) =
+    let mutable volumeRestant = volume
+    let mutable partiesInteressees = List<TasseDeCafe -> unit>()
+
+    member this.Boire(quantite) =
+        printfn "Quantité bue %.1f" (float quantite)
+        volumeRestant <- max (volumeRestant-quantite) 0.0<ml>
+        if volumeRestant <= 0.0<ml> then
+            this.alerteTasseVide ()
+    
+    member this.Remplir(nvVolume) =
+        printfn "Tasse remplie de %.1f ml" (float nvVolume)
+        volumeRestant <- volumeRestant + nvVolume
+
+    member private this.alerteTasseVide() =
+        printfn "Tasse vidée. Avertissement en cours de diffusion"
+        for element in partiesInteressees do
+            element(this)
+    
+    member this.AppelQuandTasseVide(func) =
+        partiesInteressees.Add(func)
+
+
+let tasse = new TasseDeCafe(100.0<ml>)
+
+tasse.AppelQuandTasseVide( 
+    fun tasse -> printfn "Merci pour l'avertissement..."
+                 tasse.Remplir(10.0<ml>))
+
+tasse.Boire(75.0<ml>)
+tasse.Boire(75.0<ml>)
