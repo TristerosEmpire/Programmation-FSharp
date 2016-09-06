@@ -16,10 +16,10 @@ type Bouteille(volume: float<ML>) =
     static member (+) (bg: Bouteille, bd: Bouteille ) =
         new Bouteille(bg.Volume + bd.Volume)
 
-    static member (-) (bg: Bouteille, bd: Bouteille) = 
+    static member (-) (bg: Bouteille, bd: Bouteille) =
         new Bouteille(bg.Volume-bd.Volume)
 
-    static member (~-) (b: Bouteille) = 
+    static member (~-) (b: Bouteille) =
         new Bouteille(b.Volume * -1.0<1>)
 
     static member (+) (bg:Bouteille, bd:float<ML>) =
@@ -30,7 +30,7 @@ type Bouteille(volume: float<ML>) =
         new Bouteille(bg.Volume-bd)
 
 // les indexeurs
-let (|CheckIndex|_|) (i:int) = 
+let (|CheckIndex|_|) (i:int) =
     if i <1 || i > 365 then None
     else Some i
 
@@ -81,7 +81,7 @@ jp.ToString ();;
 type ListeDeMots(txt :string) =
     let mots = txt.Split([|' '|])
     member this.GetSlice (borneINF:int option, borneSUP: int option) =
-        let tableau = 
+        let tableau =
             match borneINF, borneSUP with
             | Some borneINF, Some borneSUP -> mots.[borneINF .. borneSUP]
             | Some borneINF, None -> mots.[borneINF ..]
@@ -104,7 +104,7 @@ type Points2D(points: seq<float * float>) =
             match option with
             | Some x -> x
             | None   -> valeurParDefaut
-        
+
         let minX = getValue xinf Double.MinValue
         let maxX = getValue xsup Double.MaxValue
 
@@ -129,26 +129,24 @@ ensemblePoints.[0.9 .. 0.99, *]
 
 // Contraintes sur les types génériques
 
-exception PasPlusGrand
-
 type PlusGrandQueListe<'a when 'a :> IComparable<'a> >(minVal: 'a, liste: List<'a>) =
 
     let resultat = new List<'a>()
 
     member private this.Add (nvItem: 'a)=
         let ic = nvItem :> IComparable<'a>
-        if ic.CompareTo(minVal) > 0 then 
+        if ic.CompareTo(minVal) > 0 then
             resultat.Add(nvItem)
-        
+
     member this.Check () =
-        for i in liste do 
+        for i in liste do
             this.Add(i)
 
     member this.Items = resultat
 
 let p = new PlusGrandQueListe<int>(2, new List<int>([1;2;3;3;4;2;1;5;6]))
 p.Check ()
-p.Items 
+p.Items
 
 // DELEGUES ET EVENEMENTS
 
@@ -163,26 +161,67 @@ type TasseDeCafe(volume: float<ml>) =
         printfn "Quantité bue %.1f" (float quantite)
         volumeRestant <- max (volumeRestant-quantite) 0.0<ml>
         if volumeRestant <= 0.0<ml> then
-            this.alerteTasseVide ()
-    
+            this.AlerteTasseVide ()
+
     member this.Remplir(nvVolume) =
         printfn "Tasse remplie de %.1f ml" (float nvVolume)
         volumeRestant <- volumeRestant + nvVolume
 
-    member private this.alerteTasseVide() =
+    member private this.AlerteTasseVide() =
         printfn "Tasse vidée. Avertissement en cours de diffusion"
         for element in partiesInteressees do
             element(this)
-    
+
     member this.AppelQuandTasseVide(func) =
         partiesInteressees.Add(func)
 
 
 let tasse = new TasseDeCafe(100.0<ml>)
 
-tasse.AppelQuandTasseVide( 
+tasse.AppelQuandTasseVide(
     fun tasse -> printfn "Merci pour l'avertissement..."
                  tasse.Remplir(10.0<ml>))
 
 tasse.Boire(75.0<ml>)
 tasse.Boire(75.0<ml>)
+
+// Exemple simple de création et d'utilisation de délégués
+type PremierDelegue = delegate of int * int -> int
+
+let delegue = new PremierDelegue(fun x y -> printfn "x = %d, y = %d" x y
+                                            x+y)
+
+printfn "Le résultat de l'addition est  %d" (delegue.Invoke(1,2))
+
+// Second exemple d'utilisation de délégués
+type IntDelegate = delegate of int -> unit
+type TestListe =
+    static member ApplicationDelegue(l: int list, d: IntDelegate) =
+        l |> List.iter (fun x -> d.Invoke(x))
+
+// création d'un délégué explicite
+TestListe.ApplicationDelegue([1..10], new IntDelegate(fun x -> printfn "valeur = %d" x))
+//création d'un délégué implicite
+TestListe.ApplicationDelegue([1..10], (fun x -> printfn "valeur = %d" x))
+
+// Revenons sur le code TasseDeCafe
+type MugDelegate = delegate of unit -> unit
+
+type Mug(volume:float<ml>) =
+    let mutable volumeEnCours = volume
+
+    member this.Boire(volume, md:MugDelegate) =
+        printf "Quantité bue %.1f." (float volume)
+        if volumeEnCours > 0.0<ml> then
+            volumeEnCours <- volumeEnCours - volume
+        else
+            printfn "Mug vide ! Action en cours"
+            md.Invoke()
+        printfn "Reste %.1f" (float volumeEnCours)
+
+    member this.Remplir(volume) =
+        printfn "Mug remplit avec %.1f ml" (float volume)
+        volumeEnCours <- volumeEnCours + volume
+
+let mug = new Mug(100.0<ml>)
+mug.Boire(50.0<ml>, (fun () -> mug.Remplir(50.0<ml>)))
