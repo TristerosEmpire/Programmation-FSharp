@@ -204,24 +204,33 @@ TestListe.ApplicationDelegue([1..10], new IntDelegate(fun x -> printfn "valeur =
 //création d'un délégué implicite
 TestListe.ApplicationDelegue([1..10], (fun x -> printfn "valeur = %d" x))
 
-// Revenons sur le code TasseDeCafe
+// Revenons sur le code TasseDeCafe : peut être entièr
 type MugDelegate = delegate of unit -> unit
 
 type Mug(volume:float<ml>) =
     let mutable volumeEnCours = volume
+    let partiesInteressees = List<MugDelegate>()
 
-    member this.Boire(volume, md:MugDelegate) =
-        printf "Quantité bue %.1f." (float volume)
-        if volumeEnCours > 0.0<ml> then
-            volumeEnCours <- volumeEnCours - volume
-        else
+    member this.VolumeActuel with get() = volumeEnCours
+
+    member this.Boire(volume) =
+        printfn "Quantité bue %.1f." (float volume)
+        volumeEnCours <- volumeEnCours - volume
+        if (volumeEnCours - volume ) <= 0.0<ml> then
             printfn "Mug vide ! Action en cours"
-            md.Invoke()
+            for delegue in partiesInteressees do
+                delegue.Invoke()
         printfn "Reste %.1f" (float volumeEnCours)
 
     member this.Remplir(volume) =
-        printfn "Mug remplit avec %.1f ml" (float volume)
+        printfn "Mug rempli avec %.1f ml" (float volume)
         volumeEnCours <- volumeEnCours + volume
 
+    member this.AppelQuandTasseVide(func) =
+        partiesInteressees.Add(func)
+
 let mug = new Mug(100.0<ml>)
-mug.Boire(50.0<ml>, (fun () -> mug.Remplir(50.0<ml>)))
+// on souhaite remplir notre mug avec une quantité de 50ml lorsque le mug est vide
+let mugVide = new MugDelegate(fun () -> mug.Remplir(mug.VolumeActuel * -1.0 + 50.0<ml>))
+mug.AppelQuandTasseVide(mugVide)
+mug.Boire(150.0<ml>)
