@@ -1,6 +1,7 @@
 ﻿// POO APPLIQUEE
 open System
 open System.Collections.Generic
+open System.IO
 
 // Surcharge des opérateurs
 [<Measure>]
@@ -234,3 +235,27 @@ let mug = new Mug(100.0<ml>)
 let mugVide = new MugDelegate(fun () -> mug.Remplir(mug.VolumeActuel * -1.0 + 50.0<ml>))
 mug.AppelQuandTasseVide(mugVide)
 mug.Boire(150.0<ml>)
+
+// Combiner des délégués
+type LogMessage = delegate of string -> unit
+
+let afficheSurConsole = LogMessage(fun msg -> printfn "Message de log : %s ..." msg)
+let ecritureSurFichierLog = LogMessage(fun msg -> printfn "Ecriture du log dans le fichier : %s..." msg
+                                                  use fichier = new StreamWriter("log.txt", true)
+                                                  fichier.WriteLine(msg))
+
+// "re-typage" obligatoire car Combine retourne un Delegate et non un LogMessage
+let combinaison = LogMessage.Combine(afficheSurConsole, ecritureSurFichierLog) :?> LogMessage
+combinaison.Invoke("Nouveau message en date du " +  DateTime.Now.ToString())
+
+// controle de l'écriture du fichier : rappel sur des éléments de System.IO
+let checkLogFile () = if File.Exists("log.txt") then
+                        use lecture = new StreamReader("log.txt", true)
+                        printfn "Nous nous trouvons : %s" (Directory.GetCurrentDirectory())
+                        printfn "%s" (lecture.ReadToEnd())
+                      else
+                        failwith "Le fichier n'existe pas"
+checkLogFile ()
+
+// EVENEMENTS
+// création
