@@ -206,11 +206,12 @@ TestListe.ApplicationDelegue([1..10], new IntDelegate(fun x -> printfn "valeur =
 TestListe.ApplicationDelegue([1..10], (fun x -> printfn "valeur = %d" x))
 
 // Revenons sur le code TasseDeCafe : peut être entièr
-type MugDelegate = delegate of unit -> unit
+type MugDelegate<'a> = delegate of 'a -> unit
 
-type Mug(volume:float<ml>) =
+type Mug(volume:float<ml>, d:MugDelegate<_>) =
     let mutable volumeEnCours = volume
-    let partiesInteressees = List<MugDelegate>()
+
+    member val delegue:MugDelegate<_> = d with get, set 
 
     member this.VolumeActuel with get() = volumeEnCours
 
@@ -219,21 +220,16 @@ type Mug(volume:float<ml>) =
         volumeEnCours <- volumeEnCours - volume
         if (volumeEnCours - volume ) <= 0.0<ml> then
             printfn "Mug vide ! Action en cours"
-            for delegue in partiesInteressees do
-                delegue.Invoke()
+            this.delegue.Invoke(this)
         printfn "Reste %.1f" (float volumeEnCours)
 
     member this.Remplir(volume) =
-        printfn "Mug rempli avec %.1f ml" (float volume)
         volumeEnCours <- volumeEnCours + volume
+        printfn "Mug rempli avec %.1f ml" (float volume)
 
-    member this.AppelQuandTasseVide(func) =
-        partiesInteressees.Add(func)
-
-let mug = new Mug(100.0<ml>)
-// on souhaite remplir notre mug avec une quantité de 50ml lorsque le mug est vide
-let mugVide = new MugDelegate(fun () -> mug.Remplir(mug.VolumeActuel * -1.0 + 50.0<ml>))
-mug.AppelQuandTasseVide(mugVide)
+let d = new MugDelegate<Mug>(fun mug -> mug.Remplir(150.0<ml>))
+let mug = new Mug(100.0<ml>, d)
+mug.delegue <- new MugDelegate<Mug>(fun mug -> mug.Remplir(75.0<ml>))
 mug.Boire(150.0<ml>)
 
 // Combiner des délégués
@@ -258,4 +254,49 @@ let checkLogFile () = if File.Exists("log.txt") then
 checkLogFile ()
 
 // EVENEMENTS
-// création
+
+// on crée un type de données algébriques simple
+type Action = Ajouté | Supprimé
+
+// on crée une classe héritant de system.EventArgs
+type ArgumentsEvenement<'a>(valeur: 'a, action: Action) = 
+    inherit System.EventArgs()
+
+    member this.Valeur = valeur
+    member this.Action = action
+     
+// création d'un délégué prenant 2 paramètres : un objet et une instance d'ArgumentsEvement
+type DelegueOperation<'a> = delegate of obj * ArgumentsEvenement<'a> -> unit
+
+// classe qui utilisera comme strucutre de données un Set sur lequel sera accolé des événements
+// pour le constructeur, il y a obligation d'utiliser une contrainte :
+type SetAlternatif<'a when 'a: comparison>() = 
+    let mutable m_set = Set.empty:Set<'a>
+
+    // création d'un événement à l'ajout d'un item avec d'une part le délégué et d'autre part les arguments
+    let m_itemAjouté = new Event<DelegueOperation<'a>, ArgumentsEvenement<'a>>()
+
+    // création d'un événement au retrait d'un item
+    let m_itemRetiré = new Event<DelegueOperation<'a>, ArgumentsEvenement<'a>>()
+
+    member this.Ajoute(x) =
+        m_set <- m_set.Add(x)
+        //lancement de l'événement associé
+        m_itemAjouté.Trigger(this, new ArgumentsEvenement<_>(x, Ajouté))
+
+    member this.Retire(x) =
+        m_set <- m_set.Remove(x)
+        //lancement de l'événement associé
+        m_itemRetiré.Trigger(this, new ArgumentsEvenement<_>(x, Supprimé))
+
+    // publication des événements
+    member this.ItemAjoutéEv = m_itemAjouté.Publish
+    member this.ItemRetiréEv = m_itemRetiré.Publish
+// test 
+let sa = new SetAlternatif<int>()
+let GestionOperations = new DelegueOperation<int>(
+                                fun sender args -> printfn "La valeur %d a été %A" args.Valeur args.Action)
+sa.ItemAjoutéEv.AddHandler(GestionOperations)
+sa.ItemRetiréEv.AddHandler(GestionOperations)
+sa.Ajoute(9)
+sa.Retire(9)
