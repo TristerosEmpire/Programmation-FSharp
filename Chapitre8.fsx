@@ -300,3 +300,51 @@ sa.ItemAjoutéEv.AddHandler(GestionOperations)
 sa.ItemRetiréEv.AddHandler(GestionOperations)
 sa.Ajoute(9)
 sa.Retire(9)
+
+// EventDelegate
+type ChronoDelegue = delegate of int * int * int -> unit
+
+// création d'une classe Chrono
+type Chrono() =
+    let eve = new DelegateEvent<ChronoDelegue>()
+
+    member this.Demarre () =
+        printfn "Démarrage..."
+        // utilisation d'une fonction interne récursive terminale plutôt qu'un while
+        let rec boucle iteration =
+            //Pause d'une seconde
+            Threading.Thread.Sleep(1000)
+            // pattern matching afin d'éviter une boucle infinie
+            match iteration with
+            | 10 -> printfn "...Fin"
+            | _  -> let h, m, s = DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second
+                    eve.Trigger([|box h; box m; box s|])
+                    boucle (iteration + 1)
+        boucle 0
+
+    // Publication 
+    member this.ChronoUpdate = eve.Publish
+
+//test de la classe
+let c = new Chrono()
+c.ChronoUpdate.AddHandler(
+    new ChronoDelegue(
+        fun h m s -> printfn "[%d:%d:%d]" h m s 
+    )
+)
+c.Demarre()
+
+// remarque sur le boxing/unboxing
+// box : 'a -> obj
+// unbox : 'a -> 'b
+// pour détecter le type on utilisera l'opérateur :?
+
+(box 42) :? int;;
+
+let detecteEntiers t =
+    match box t with
+    | :? int -> printfn "%A est un entier" t
+    | _ -> printfn "Autre chose"
+
+detecteEntiers 3;;
+detecteEntiers "3";;
