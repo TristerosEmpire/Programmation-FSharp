@@ -211,7 +211,7 @@ type MugDelegate<'a> = delegate of 'a -> unit
 type Mug(volume:float<ml>, d:MugDelegate<_>) =
     let mutable volumeEnCours = volume
 
-    member val delegue:MugDelegate<_> = d with get, set 
+    member val delegue:MugDelegate<_> = d with get, set
 
     member this.VolumeActuel with get() = volumeEnCours
 
@@ -259,18 +259,18 @@ checkLogFile ()
 type Action = Ajouté | Supprimé
 
 // on crée une classe héritant de system.EventArgs
-type ArgumentsEvenement<'a>(valeur: 'a, action: Action) = 
+type ArgumentsEvenement<'a>(valeur: 'a, action: Action) =
     inherit System.EventArgs()
 
     member this.Valeur = valeur
     member this.Action = action
-     
+
 // création d'un délégué prenant 2 paramètres : un objet et une instance d'ArgumentsEvement
 type DelegueOperation<'a> = delegate of obj * ArgumentsEvenement<'a> -> unit
 
 // classe qui utilisera comme strucutre de données un Set sur lequel sera accolé des événements
 // pour le constructeur, il y a obligation d'utiliser une contrainte :
-type SetAlternatif<'a when 'a: comparison>() = 
+type SetAlternatif<'a when 'a: comparison>() =
     let mutable m_set = Set.empty:Set<'a>
 
     // création d'un événement à l'ajout d'un item avec d'une part le délégué et d'autre part les arguments
@@ -292,7 +292,7 @@ type SetAlternatif<'a when 'a: comparison>() =
     // publication des événements
     member this.ItemAjoutéEv = m_itemAjouté.Publish
     member this.ItemRetiréEv = m_itemRetiré.Publish
-// test 
+// test
 let sa = new SetAlternatif<int>()
 let GestionOperations = new DelegueOperation<int>(
                                 fun sender args -> printfn "La valeur %d a été %A" args.Valeur args.Action)
@@ -301,7 +301,7 @@ sa.ItemRetiréEv.AddHandler(GestionOperations)
 sa.Ajoute(9)
 sa.Retire(9)
 
-// EventDelegate
+// EventDelegate: alternative à Event sans recourir à EventArgs
 type ChronoDelegue = delegate of int * int * int -> unit
 
 // création d'une classe Chrono
@@ -322,14 +322,14 @@ type Chrono() =
                     boucle (iteration + 1)
         boucle 0
 
-    // Publication 
+    // Publication
     member this.ChronoUpdate = eve.Publish
 
 //test de la classe
 let c = new Chrono()
 c.ChronoUpdate.AddHandler(
     new ChronoDelegue(
-        fun h m s -> printfn "[%d:%d:%d]" h m s 
+        fun h m s -> printfn "[%d:%d:%d]" h m s
     )
 )
 c.Demarre()
@@ -348,3 +348,47 @@ let detecteEntiers t =
 
 detecteEntiers 3;;
 detecteEntiers "3";;
+
+//Module Observable
+[<Measure>]
+type minute
+
+[<Measure>]
+type bpm = 1/minute
+
+type GenreMusical = Classique | Pop |Rock |Electro | Indie | Country
+
+type Extrait = {Titre: string; Genre: GenreMusical; BPM: int<bpm>}
+
+//Création d'un type classe héritant de System.EventArgs
+type ExtraitEventArgs(titre: string, genre: GenreMusical, bpm: int<bpm>) =
+    inherit System.EventArgs()
+
+    member this.Titre = titre
+    member this.Genre = genre
+    member this.BPM = bpm
+
+// création du délégué
+type DelegueExtrait = delegate of obj * ExtraitEventArgs -> unit
+
+// création du type classe JukeBox
+type Jukebox() =
+    let m_extraitDemarreEvent = new Event<DelegueExtrait, ExtraitEventArgs>()
+
+    member this.Interpretation(extrait:Extrait) =
+        m_extraitDemarreEvent.Trigger(this,
+            new ExtraitEventArgs(
+                    extrait.Titre, extrait.Genre, extrait.BPM
+        ))
+
+    [<CLIEvent>]
+    member this.ExtraitEvénementLancé = m_extraitDemarreEvent.Publish
+
+// rappel de l'utilisation des délégués
+let chant1:Extrait = {Titre="Extrait 1"; Genre=Electro; BPM=112<bpm>}
+let juke = new Jukebox()
+let del = new DelegueExtrait(fun objet args -> 
+    printfn "Titre joué %s" args.Titre
+    )
+juke.ExtraitEvénementLancé.AddHandler(del);
+juke.Interpretation(chant1)
