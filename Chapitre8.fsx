@@ -382,13 +382,34 @@ type Jukebox() =
         ))
 
     [<CLIEvent>]
-    member this.ExtraitEvénementLancé = m_extraitDemarreEvent.Publish
+    member this.evExtraitLancé = m_extraitDemarreEvent.Publish
 
-// rappel de l'utilisation des délégués
-let chant1:Extrait = {Titre="Extrait 1"; Genre=Electro; BPM=112<bpm>}
+// rappel de l'utilisation des délégués et leur ajout à l'événement
+let chant1:Extrait = {Titre="Extrait 1"; Genre=Electro; BPM=152<bpm>}
+let chant2:Extrait = {Titre="Extrait 2"; Genre = Classique; BPM=130<bpm>}
 let juke = new Jukebox()
 let del = new DelegueExtrait(fun objet args -> 
     printfn "Titre joué %s" args.Titre
     )
-juke.ExtraitEvénementLancé.AddHandler(del);
+juke.evExtraitLancé.AddHandler(del);
 juke.Interpretation(chant1)
+
+// Utilisation du module Observable
+let juke2 = new Jukebox()
+
+let evTitreRapide, evTitreLent =
+    juke2.evExtraitLancé 
+    |> Observable.filter(
+                fun argsExtrait -> match argsExtrait.Genre with
+                                   | Classique -> false
+                                   | _ -> true)
+    |> Observable.partition (
+                fun argsNvExtrait -> argsNvExtrait.BPM >= 120<bpm> )
+
+// ajout d'événements aux types Observables
+evTitreRapide.Add(fun extrait -> printfn "En écoute : '%s' (rythme rapide)" extrait.Titre)
+evTitreLent.Add(fun extrait -> printfn "En écoute : '%s' (rythme lent)" extrait.Titre)
+
+// test :
+juke2.Interpretation(chant1)
+juke2.Interpretation(chant2)
