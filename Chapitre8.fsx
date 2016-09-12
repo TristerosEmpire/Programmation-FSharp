@@ -2,6 +2,7 @@
 open System
 open System.Collections.Generic
 open System.IO
+open System.Windows.Forms
 
 // Surcharge des opérateurs
 [<Measure>]
@@ -413,3 +414,12 @@ evTitreLent.Add(fun extrait -> printfn "En écoute : '%s' (rythme lent)" extrait
 // test :
 juke2.Interpretation(chant1)
 juke2.Interpretation(chant2)
+
+// Observable.add : ('a -> unit) -> IObservable<'a> -> unit
+let form = new Form(Text="Ne pas passer la souris !", TopMost=true)
+form.MouseMove 
+    |> Observable.filter (fun argMvt -> argMvt.Y > form.Height / 2)
+        // on pourrait utiliser MessageBox mais une dizaine de ces fenêtres s'afficheraient...
+    |> Observable.add(fun argMvt -> Console.WriteLine("La souris n'aurait pas dû passer la moitié inférieure de la fenêtre !")
+                                    |> ignore)
+form.ShowDialog ()
