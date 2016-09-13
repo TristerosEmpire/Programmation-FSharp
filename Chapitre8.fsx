@@ -387,7 +387,7 @@ type Jukebox() =
 
 // rappel de l'utilisation des délégués et leur ajout à l'événement
 let chant1:Extrait = {Titre="Extrait 1"; Genre=Electro; BPM=152<bpm>}
-let chant2:Extrait = {Titre="Extrait 2"; Genre = Classique; BPM=130<bpm>}
+let chant2:Extrait = {Titre="Extrait 2"; Genre = Indie; BPM=100<bpm>}
 let juke = new Jukebox()
 let del = new DelegueExtrait(fun objet args -> 
     printfn "Titre joué %s" args.Titre
@@ -402,8 +402,9 @@ let evTitreRapide, evTitreLent =
     juke2.evExtraitLancé 
     |> Observable.filter(
                 fun argsExtrait -> match argsExtrait.Genre with
-                                   | Classique -> false
-                                   | _ -> true)
+                                   | Pop | Rock | Electro | Indie | Country -> true
+                                   | _ -> false)
+
     |> Observable.partition (
                 fun argsNvExtrait -> argsNvExtrait.BPM >= 120<bpm> )
 
@@ -415,7 +416,15 @@ evTitreLent.Add(fun extrait -> printfn "En écoute : '%s' (rythme lent)" extrait
 juke2.Interpretation(chant1)
 juke2.Interpretation(chant2)
 
+// Observable.merge : IObservable<'a> -> IObservable<'a> -> IObservable<'a>
+
+let fusionEvénements = Observable.merge evTitreLent evTitreRapide
+fusionEvénements.Add(fun args -> printfn "On commence à danser et peu importe le tempo (%d bpm) !" (int args.BPM))
+juke2.Interpretation(chant1)
+juke2.Interpretation(chant2)
+
 // Observable.add : ('a -> unit) -> IObservable<'a> -> unit
+
 let form = new Form(Text="Ne pas passer la souris !", TopMost=true)
 form.MouseMove 
     |> Observable.filter (fun argMvt -> argMvt.Y > form.Height / 2)
@@ -423,3 +432,45 @@ form.MouseMove
     |> Observable.add(fun argMvt -> Console.WriteLine("La souris n'aurait pas dû passer la moitié inférieure de la fenêtre !")
                                     |> ignore)
 form.ShowDialog ()
+
+// Observable.map : ('a -> 'b) -> IObservable<'a> -> IObservable<'b>
+
+// création d'un form +  événement associé au simple clic
+let form2 = new Form(Text="Clic relatif", TopMost=true)
+form2.MouseClick.AddHandler(
+    new MouseEventHandler(
+        fun objet args -> printfn "Evenement clic normal @ [%d, %d]" args.X args.Y
+    )
+)
+
+// création d'un événement clic relatif au centre du formulaire
+let recentrationClickEvé = 
+    form2.MouseClick |> Observable.map (fun args -> args.X - (form2.Width / 2), args.Y - (form2.Height / 2))
+
+// soucription
+recentrationClickEvé |> Observable.add (
+        fun (x, y) -> printfn "Evenement clic relatif @ [%d, %d]" x y
+)
+
+// lancement de la fenêtre
+form2.ShowDialog()
+
+// Créer des événements en .Net nécessite l'utilisation de l'attribut [<CLIEvent>]
+type TasseVideDélégué = delegate of obj * EventArgs -> unit
+
+type Tasse(volume: float<ml>) = 
+    let mutable m_volumeEnCours = volume
+    let événementTasseVide = new Event<TasseVideDélégué, EventArgs>()
+
+    member this.Boire(vol) =
+        m_volumeEnCours <- m_volumeEnCours - vol
+        printfn "Volume bu : %.1f \nVolume restant : %.1f" vol (float m_volumeEnCours)
+        if m_volumeEnCours <= 0.0<ml> then
+            événementTasseVide.Trigger(this, new EventArgs())
+
+    member this.Remplir(vol) =
+        printfn "Tasse sera remplie de %.1f ml" vol
+        m_volumeEnCours <- vol + m_volumeEnCours
+
+    [<CLIEvent>]
+    member this.TasseVide = événementTasseVide.Publish
