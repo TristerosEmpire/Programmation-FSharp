@@ -18,3 +18,15 @@ let lanceThread () =
 
 lanceThread ()
 lanceThread ()
+
+// Pool de threads
+
+// on passe une fonction lambda sans avoir besoin d'instancier le délégué WaitCallback
+ThreadPool.QueueUserWorkItem(fun _ -> for i in 1..5 do printfn "%d" i)
+
+//soit un crée une instance de WaitCallback
+let afficheNombre (max : obj) =
+    for i in 1 .. (max :?> int) do
+        printfn "%d" i
+// soit on utilise explicitement le délégué avec la nécessité de faire un boxing sur le type int
+ThreadPool.QueueUserWorkItem(new WaitCallback(afficheNombre), box 5)
