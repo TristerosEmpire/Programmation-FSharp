@@ -8,5 +8,6 @@ Les différents codes sources présentés ici sont des reprises et des essais co
 - :ok: chapitre 4 (*Chapitre4.fsx*)
 - :ok: chapitre 5 (*Chapitre5.fsx*, *ClasseEtSignature.fs*, *ClasseEtSignature.fsi*)
 - :ok: chapitre 6 (*Chapitre6.fsx*)
-- :ok: chapitre7 (*Chapitre7.fsx*)
-- :ok: chapitre 8 : (*Chapitre8.fsx*)
+- :ok: chapitre 7 (*Chapitre7.fsx*)
+- :ok: chapitre 8 (*Chapitre8.fsx*)
+- :warning: chapitre 9 (*en cours de conception*)
