@@ -5,7 +5,7 @@ open System.Collections.Generic
 open System.IO
 
 // THREADS
-// Création et lancement de threads 
+// Création et lancement de threads
 let corpsDuThread () =
     for i in 1..5 do
         // pause d'un dixième de seconde
@@ -32,7 +32,7 @@ let afficheNombre (max : obj) =
 ThreadPool.QueueUserWorkItem(new WaitCallback(afficheNombre), box 5)
 
 // Problèmes : compétitions / race conditions
-let sommeTableauErreur (tab: int[]) = 
+let sommeTableauErreur (tab: int[]) =
     let total = ref 0
 
     let thread1Achevé = ref false
@@ -51,7 +51,7 @@ let sommeTableauErreur (tab: int[]) =
                  thread2Achevé := true
     ) |> ignore
 
-    while !thread1Achevé = false || !thread2Achevé = false do
+    while not !thread1Achevé || not !thread2Achevé do
         Thread.Sleep(0)
 
     !total
@@ -60,7 +60,7 @@ let millionUn = Array.create 1000000 1
 
 sommeTableauErreur millionUn
 
-// résolution sans blocage: 
+// résolution sans blocage:
 
 let sommeTableauNonBloquée (tab:int[]) =
     let sstotal1 = ref 0
@@ -82,7 +82,7 @@ let sommeTableauNonBloquée (tab:int[]) =
     ) |> ignore
 
     // attendre que les 2 threads aient fini leur travail respectif
-    while !thread1Achevé = false || !thread2Achevé = false do
+    while not !thread1Achevé || not !thread2Achevé do
         Thread.Sleep(0)
 
     !sstotal1 + !sstotal2
@@ -109,9 +109,46 @@ let sommeTableauBloqué (tab:int[]) =
                  thread2Achevé := true
     ) |> ignore
 
-    while !thread1Achevé = false || !thread2Achevé = false do
+    while not !thread1Achevé || not !thread2Achevé do
         Thread.Sleep(0)
 
     !total
 
 sommeTableauBloqué millionUn
+
+// Problème des deadlocks ou interblocage : attention le FSI sera bloqué !
+type CompteBancaire = {
+    IDCompte: int;
+    NomPropriétaire: string;
+    mutable Balance : int
+}
+
+let transfert montant duCompte versCompte =
+    printfn "Blocage du compte de  %s : dépôt de fonds." duCompte.NomPropriétaire
+    lock duCompte
+        (fun () ->
+                    printfn "Blocage du compte de %s - retrait de fonds."
+                            duCompte.NomPropriétaire
+                    lock versCompte
+                         (fun () ->
+                                    duCompte.Balance <- duCompte.Balance - montant
+                                    printfn "Compte de %s - balance = %d" duCompte.NomPropriétaire duCompte.Balance
+                                    versCompte. Balance <- versCompte.Balance + montant
+                                    printfn "Compte de %s - balance = %d" versCompte.NomPropriétaire versCompte.Balance
+                         )
+        )
+// on crée deux compte
+let alice:CompteBancaire = {
+    IDCompte=1;
+    NomPropriétaire="Alice";
+    Balance=2000
+}
+
+let bob:CompteBancaire = {
+    IDCompte=2;
+    NomPropriétaire="Bob"
+    Balance=1000
+}
+
+ThreadPool.QueueUserWorkItem(fun _ -> transfert 100 alice bob)
+ThreadPool.QueueUserWorkItem(fun _ -> transfert 100 bob alice)
