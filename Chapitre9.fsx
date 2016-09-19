@@ -123,6 +123,19 @@ type CompteBancaire = {
     mutable Balance : int
 }
 
+// on crée deux comptes
+let alice:CompteBancaire = {
+    IDCompte=1;
+    NomPropriétaire="Alice";
+    Balance=2000
+}
+
+let bob:CompteBancaire = {
+    IDCompte=2;
+    NomPropriétaire="Bob"
+    Balance=1000
+}
+
 let transfert montant duCompte versCompte =
     printfn "Blocage du compte de  %s : dépôt de fonds." duCompte.NomPropriétaire
     lock duCompte
@@ -136,19 +149,80 @@ let transfert montant duCompte versCompte =
                                     versCompte. Balance <- versCompte.Balance + montant
                                     printfn "Compte de %s - balance = %d" versCompte.NomPropriétaire versCompte.Balance
                          )
+                    printfn("Opération achevée.")
         )
-// on crée deux compte
-let alice:CompteBancaire = {
-    IDCompte=1;
-    NomPropriétaire="Alice";
-    Balance=2000
-}
-
-let bob:CompteBancaire = {
-    IDCompte=2;
-    NomPropriétaire="Bob"
-    Balance=1000
-}
 
 ThreadPool.QueueUserWorkItem(fun _ -> transfert 100 alice bob)
 ThreadPool.QueueUserWorkItem(fun _ -> transfert 100 bob alice)
+
+// une solution possible proposée par C.Smith : utilisé le lock sur l'ID le plus petit
+
+let transfert2 montant duCompte versCompte =
+    printfn "Blocage du compte de  %s : dépôt de fonds." duCompte.NomPropriétaire
+    lock (min duCompte versCompte)
+        (fun () ->
+                    printfn "Blocage du compte de %s - retrait de fonds."
+                            duCompte.NomPropriétaire
+                    duCompte.Balance <- duCompte.Balance - montant
+                    printfn "Compte de %s - balance = %d" duCompte.NomPropriétaire duCompte.Balance
+                    versCompte. Balance <- versCompte.Balance + montant
+                    printfn "Compte de %s - balance = %d" versCompte.NomPropriétaire versCompte.Balance
+                    printfn("Opération achevée.")
+        )
+
+ThreadPool.QueueUserWorkItem(fun _ -> transfert2 100 alice bob)
+ThreadPool.QueueUserWorkItem(fun _ -> transfert2 100 bob alice)
+
+// Programmation Asynchrone
+// selon le modèle APM
+
+let traitementAsynchroneFichier (cheminFichier: string) (traitementOctets: byte[] -> byte[]) =
+    // callback appelé quand l'écriture asynchrone est achevée
+    let écritureAsynchroneCallback =
+        new AsyncCallback(
+            fun (iar:IAsyncResult) ->
+                //récupère l'état depuis le résultat asynchrone
+                let fluxEnEcriture = iar.AsyncState :?> FileStream
+
+                //achève l'opération d'écriture asynchrone via EndWrite
+                let octetsEcrits = fluxEnEcriture.EndWrite(iar)
+                fluxEnEcriture.Close()
+                printfn "Traitement du fichier achevé [%s]"
+                        (Path.GetFileName(fluxEnEcriture.Name))
+            )
+
+    // callback appelé quand l'écriture asynchrone est achevée
+    let lectureAsynchroneCallback =
+        new AsyncCallback(
+            fun (iar:IAsyncResult) ->
+                //récupère l'état depuis le résultat asynchrone
+                let (lectureFlux:FileStream), (données:byte[]) =
+                            iar.AsyncState :?> (FileStream * byte[])
+                
+                //achève la lecture asynchrone par l'appel de EndRead
+                let octetsLus = lectureFlux.EndRead(iar)
+                lectureFlux.Close()
+                //Traitement du résultat
+                printfn "Traitement du fichier [%s], lecture [%d] octets"
+                        (Path.GetFileName(lectureFlux.Name))
+                        octetsLus
+
+                let octetsMAJ = traitementOctets données
+                let fichierFinal = new FileStream(lectureFlux.Name + ".result", FileMode.Create)
+                let _ = fichierFinal.BeginWrite(octetsMAJ, 0, octetsMAJ.Length,
+                                                écritureAsynchroneCallback,
+                                                fichierFinal)
+                ()
+        )
+
+    // démarrage de la lecture asynchrone
+    let fs = new FileStream(cheminFichier, FileMode.Open, FileAccess.Read, FileShare.Read,2048,
+                            FileOptions.Asynchronous)
+
+    let longueurFichier = int fs.Length
+    let tampon = Array.zeroCreate longueurFichier
+    // Etat passé à la lecture asynchron e
+    let état = (fs, tampon)
+    printfn "Traitement du fichier [%s]" (Path.GetFileName(cheminFichier))
+    let _ = fs.BeginRead(tampon,0,tampon.Length, lectureAsynchroneCallback, état)
+    ()
