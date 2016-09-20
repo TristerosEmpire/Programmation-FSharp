@@ -3,6 +3,7 @@ open System
 open System.Threading
 open System.Collections.Generic
 open System.IO
+open System.Net
 
 // THREADS
 // Création et lancement de threads
@@ -242,3 +243,22 @@ let traitementAsynchroneFichier2 (cheminFichier:string) (traitementOctets: byte[
 
         printfn "Traitement du fichier [%s] achevé." <| Path.GetFileName(cheminFichier)
     }|> Async.Start
+
+// démarrage de tâches asynchrones et récupération de valeur
+let recupContenuHTML (url:string) =
+    async{
+            let requete = WebRequest.Create(url)
+            let! reponse = requete.AsyncGetResponse()
+
+            use stream = reponse.GetResponseStream()
+            use lecture = new StreamReader(stream)
+
+            return lecture.ReadToEndAsync().Result
+    }
+
+let html = recupContenuHTML "http://www.github.com/" |> Async.RunSynchronously
+// utilisation de Async.RunSynchronously avec Async.Parallel
+let htmls = ["http://www.google.com";"http://yahoo.com";"http://www.bing.com"]
+            |> List.map recupContenuHTML 
+            |> Async.Parallel
+            |> Async.RunSynchronously
