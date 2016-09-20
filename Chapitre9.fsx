@@ -226,3 +226,19 @@ let traitementAsynchroneFichier (cheminFichier: string) (traitementOctets: byte[
     printfn "Traitement du fichier [%s]" (Path.GetFileName(cheminFichier))
     let _ = fs.BeginRead(tampon,0,tampon.Length, lectureAsynchroneCallback, état)
     ()
+
+// programmation asynchrone : worflow asynchrone en F# (solution alternative)
+let traitementAsynchroneFichier2 (cheminFichier:string) (traitementOctets: byte[] -> byte[]) =
+    async {
+        printfn "Traitement du fichier [%s]" (Path.GetFileName(cheminFichier))
+        use fs = new FileStream(cheminFichier, FileMode.Open)
+        let octetsALire = int fs.Length
+        let! données = fs.AsyncRead(octetsALire)
+
+        printfn "[%s] ouvert, [%i] octets lus." (Path.GetFileName(cheminFichier)) données.Length
+        let données' = traitementOctets données
+        use fichierRésultat = new FileStream(cheminFichier + ".resultat", FileMode.Create)
+        do! fichierRésultat.AsyncWrite(données', 0, données'.Length)
+
+        printfn "Traitement du fichier [%s] achevé." <| Path.GetFileName(cheminFichier)
+    }|> Async.Start
