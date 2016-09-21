@@ -262,3 +262,25 @@ let htmls = ["http://www.google.com";"http://yahoo.com";"http://www.bing.com"]
             |> List.map recupContenuHTML 
             |> Async.Parallel
             |> Async.RunSynchronously
+
+// workflow et exceptions : reprise du code précédent
+let recupContenuHTML2 (url:string) =
+    async{
+        try 
+            let requete = WebRequest.Create(url)
+            let! reponse = requete.AsyncGetResponse()
+
+            use stream = reponse.GetResponseStream()
+            use lecture = new StreamReader(stream)
+
+            return lecture.ReadToEndAsync().Result
+        with
+        | :? IOException as ioe -> return "Erreur IO : " + ioe.Message
+        | :? WebException as we -> return "Erreur Web : " +  we.Message
+    }
+// test
+let htmls2 = ["http://www.google.com";"http://yahoo.com";"http://www.bing.com"; "http://www.fhouzhf.com"]
+            |> List.map recupContenuHTML2
+            |> Async.Parallel
+            |> Async.RunSynchronously
+htmls2.[3]
