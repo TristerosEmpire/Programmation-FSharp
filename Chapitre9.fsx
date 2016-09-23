@@ -298,18 +298,37 @@ let tacheAnnulable =
     }
 
 let gestionAnnulation (oce : OperationCanceledException) =
-    printfn "Tâche annulée !";;
+    printfn "Tâche annulée !"
 
-Async.TryCancelled(tacheAnnulable, gestionAnnulation) |> Async.Start
+
 //Arrêt immédiat :
 //Async.CancelDefaultToken()
 
-let n = (new Random()).Next 10
-printfn "Mise en attente de %d secondes" n
-(* 
-la valeur aléatoire est le nombre de secondes maximum avant annulation
-*)
+let annulationDifférée =
+    Async.TryCancelled(tacheAnnulable, gestionAnnulation) |> Async.Start
+    let n = (new Random()).Next 10
+    printfn "%d secondes avant annulation" n
+    (*
+    la valeur aléatoire est le nombre de secondes maximum avant annulation
+    *)
+    for i = 0 to n do
+        Thread.Sleep(1000)
+    Async.CancelDefaultToken()
 
-for i = 1 to n do
-    Thread.Sleep(1000)
-Async.CancelDefaultToken()
+// utilisation de CancellationTokenSource
+
+let annulationTraquee = 
+    let traitement = Async.TryCancelled(tacheAnnulable, gestionAnnulation)
+    let sourceAnnulation = new CancellationTokenSource()
+    Async.Start(traitement, sourceAnnulation.Token)
+
+    // rerpise du code précédent
+    let n = (new Random()).Next 10
+    printfn "%d secondes avant annulation" n
+    (*
+    la valeur aléatoire est le nombre de secondes maximum avant annulation
+    *)
+    for i = 0 to n do
+        Thread.Sleep(1000)
+
+    sourceAnnulation.Cancel()
