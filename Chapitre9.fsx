@@ -199,7 +199,7 @@ let traitementAsynchroneFichier (cheminFichier: string) (traitementOctets: byte[
                 //récupère l'état depuis le résultat asynchrone
                 let (lectureFlux:FileStream), (données:byte[]) =
                             iar.AsyncState :?> (FileStream * byte[])
-                
+
                 //achève la lecture asynchrone par l'appel de EndRead
                 let octetsLus = lectureFlux.EndRead(iar)
                 lectureFlux.Close()
@@ -259,14 +259,14 @@ let recupContenuHTML (url:string) =
 let html = recupContenuHTML "http://www.github.com/" |> Async.RunSynchronously
 // utilisation de Async.RunSynchronously avec Async.Parallel
 let htmls = ["http://www.google.com";"http://yahoo.com";"http://www.bing.com"]
-            |> List.map recupContenuHTML 
+            |> List.map recupContenuHTML
             |> Async.Parallel
             |> Async.RunSynchronously
 
 // workflow et exceptions : reprise du code précédent
 let recupContenuHTML2 (url:string) =
     async{
-        try 
+        try
             let requete = WebRequest.Create(url)
             let! reponse = requete.AsyncGetResponse()
 
@@ -284,3 +284,32 @@ let htmls2 = ["http://www.google.com";"http://yahoo.com";"http://www.bing.com"; 
             |> Async.Parallel
             |> Async.RunSynchronously
 htmls2.[3]
+
+//annulation
+let tacheAnnulable =
+    async {
+
+        printfn "Attendre 10 secondes..."
+        for i =0 to 10 do
+            printfn "%d..." i
+            do! Async.Sleep(1000)
+
+        printfn "Tâche terminée !"
+    }
+
+let gestionAnnulation (oce : OperationCanceledException) =
+    printfn "Tâche annulée !";;
+
+Async.TryCancelled(tacheAnnulable, gestionAnnulation) |> Async.Start
+//Arrêt immédiat :
+//Async.CancelDefaultToken()
+
+let n = (new Random()).Next 10
+printfn "Mise en attente de %d secondes" n
+(* 
+la valeur aléatoire est le nombre de secondes maximum avant annulation
+*)
+
+for i = 1 to n do
+    Thread.Sleep(1000)
+Async.CancelDefaultToken()
