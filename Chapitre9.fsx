@@ -288,7 +288,6 @@ htmls2.[3]
 //annulation
 let tacheAnnulable =
     async {
-
         printfn "Attendre 10 secondes..."
         for i =0 to 10 do
             printfn "%d..." i
@@ -332,3 +331,41 @@ let annulationTraquee =
         Thread.Sleep(1000)
 
     sourceAnnulation.Cancel()
+
+// Utilisation de Async.StartWithContinuations
+let tacheAsync =
+    let n = (new Random()).Next 15
+    printfn "Possibilité d'annulation au bout de %d secondes." n
+    async {
+        printfn "Démarrage des 10 secondes..."
+        for i =0 to 10 do
+            printfn "%d..." i
+            do! Async.Sleep(1000)
+            // si le choix aléatoire est inférieur ou égal à 5 alors on lève une exception
+            if n<=5 && i = n then
+                failwith "Durée trop courte"
+            // si i est égal au choix aléatoire alors on annule
+            elif i=n then
+                Async.CancelDefaultToken()
+    };;
+
+// 1 - On exécute le code suivant 
+
+Async.StartWithContinuations(
+    tacheAsync,
+    (fun _ ->  printfn "Tâche finalisée sans problème"),
+    (fun exc -> printfn "Exception levée : %s" exc.Message),
+    (fun annule -> printfn "Annulation : %s" annule.Message)
+) 
+(*
+2 - on exécute la ligne suivante devra être exécutée après le message final
+pour pouvoir sortir et récupérer le prompt
+*)
+Async.CancelDefaultToken()
+
+(*
+pour un autre snippet avec Async.StartWithContinuations : http://www.fssnip.net/ob
+avec utilisation d'une boucle récursive
+
+doc MSDN + exemple : https://technet.microsoft.com/fr-fr/library/ee370487(v=vs.110).aspx
+*)
