@@ -316,7 +316,7 @@ let annulationDifférée =
 
 // utilisation de CancellationTokenSource
 
-let annulationTraquee = 
+let annulationTraquee =
     let traitement = Async.TryCancelled(tacheAnnulable, gestionAnnulation)
     let sourceAnnulation = new CancellationTokenSource()
     Async.Start(traitement, sourceAnnulation.Token)
@@ -347,16 +347,16 @@ let tacheAsync =
             // si i est égal au choix aléatoire alors on annule
             elif i=n then
                 Async.CancelDefaultToken()
-    };;
+    }
 
-// 1 - On exécute le code suivant 
+// 1 - On exécute le code suivant
 
 Async.StartWithContinuations(
     tacheAsync,
     (fun _ ->  printfn "Tâche finalisée sans problème"),
     (fun exc -> printfn "Exception levée : %s" exc.Message),
     (fun annule -> printfn "Annulation : %s" annule.Message)
-) 
+)
 (*
 2 - on exécute la ligne suivante devra être exécutée après le message final
 pour pouvoir sortir et récupérer le prompt
@@ -369,3 +369,30 @@ avec utilisation d'une boucle récursive
 
 doc MSDN + exemple : https://technet.microsoft.com/fr-fr/library/ee370487(v=vs.110).aspx
 *)
+
+// Customisation des primitives Async
+type System.IO.Directory with
+    static member GetFilesAsync(chemin:string, motif:string) =
+        let delegue = new Func<string*string, string[]>(Directory.GetFiles)
+        Async.FromBeginEnd(
+            (chemin, motif),
+            delegue.BeginInvoke,
+            delegue.EndInvoke
+        )
+
+type System.IO.File with
+    static member CopyAsync(source: string, dest: string) =
+        let delegue = new Func<string*string, unit>(File.Copy)
+        Async.FromBeginEnd(
+            (source, dest),
+            delegue.BeginInvoke,
+            delegue.EndInvoke
+        )
+
+let sauvegardeAsynchrone source destination motifDeRecherche =
+    async {
+        let! fichiers = Directory.GetFilesAsync(source, motifDeRecherche)
+        for fichier in fichiers do
+            let nom = Path.GetFileName(fichier)
+            do! File.CopyAsync(fichier, Path.Combine(destination, nom))
+    }
