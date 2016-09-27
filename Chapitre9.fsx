@@ -1,7 +1,7 @@
 ﻿// Programmation Asynchrone et Parallèle
 open System
 open System.Threading
-open System.Collections.Generic
+open System.Threading.Tasks
 open System.IO
 open System.Net
 
@@ -396,3 +396,33 @@ let sauvegardeAsynchrone source destination motifDeRecherche =
             let nom = Path.GetFileName(fichier)
             do! File.CopyAsync(fichier, Path.Combine(destination, nom))
     }
+
+// Programmation Parallèle
+
+// Parallel.For : calcul parallèle de deux matrices
+let multiplierMatrice (matrice1: float[,]) (matrice2: float[,]) =
+    let m1Ligne, m1Col = Array2D.length1 matrice1, Array2D.length2 matrice1
+    let m2Ligne, m2Col = Array2D.length1 matrice2, Array2D.length2 matrice2
+    if m1Ligne <> m2Col then failwith "Les dimensions entre les matrices ne conviennent pas."
+
+    // création d'un espace pour la matrice des résultats : final
+
+    let (final:float[,]) = Array2D.zeroCreate m1Col m2Ligne
+    let fLigne, fCol = m1Col, m2Ligne
+
+    // calcule pour une ligne finalisée
+    let calculeLigne idLigne =
+        for idCol=0 to fCol-1 do
+            for x = 0 to m1Ligne-1 do
+                final.[idCol, idLigne] <- final.[idCol, idLigne] + matrice1.[x, idCol] * matrice2.[idLigne, x]
+
+        ()
+
+    let _ = Parallel.For(0, fLigne, new Action<int>(calculeLigne))
+    // on retourne la matrice finalisée
+    final
+
+// test :
+let x = array2D [| [|1.0;0.0|] ; [|0.0;1.0|] |]
+let y = array2D [| [|1.0;2.0|] ; [|7.0;8.0|] |]
+let matriceNV = multiplierMatrice y x
