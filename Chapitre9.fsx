@@ -4,6 +4,9 @@ open System.Threading
 open System.Threading.Tasks
 open System.IO
 open System.Net
+open System.Drawing
+open System.Drawing.Imaging
+open System.Drawing.Drawing2D
 
 // THREADS
 // Création et lancement de threads
@@ -445,3 +448,25 @@ let rechercheFichiersSecrets motclé répertoire =
     Array.Parallel.iter File.Encrypt fichiersSecrets
     // affiche le contenu des fichiers possédant le mot-clé désiré
     donnéesSecrètes
+
+let redimensionneIMG (largeur:int, hauteur:int) (fichier:string) =
+    let original = Bitmap.FromFile(fichier)
+    let redim = new Bitmap(largeur,hauteur)
+    use g = Graphics.FromImage(redim)
+
+    let nomFichier = Path.GetFileNameWithoutExtension(fichier) 
+    let repertoire = Path.GetDirectoryName(fichier)
+
+    redim.Save(
+            Path.Combine(
+                Path.GetDirectoryName(fichier), Path.GetFileNameWithoutExtension(fichier)+".redim.jpg"
+            ), ImageFormat.Jpeg)
+
+let mesFichiersImagesJPG (répertoire:string) =
+    Directory.GetFiles(répertoire, "*.jpg")
+
+let redimensionne repertoire = mesFichiersImagesJPG repertoire 
+                               |> Array.map (fun fichier -> Task.Factory.StartNew(new Action(fun () -> redimensionneIMG (640, 480) fichier)))
+
+// remplacer XXX par le nom d'utilisateur
+Task.WaitAll(redimensionne "/home/XXX/Images")
