@@ -426,3 +426,22 @@ let multiplierMatrice (matrice1: float[,]) (matrice2: float[,]) =
 let x = array2D [| [|1.0;0.0|] ; [|0.0;1.0|] |]
 let y = array2D [| [|1.0;2.0|] ; [|7.0;8.0|] |]
 let matriceNV = multiplierMatrice y x
+
+// module Array.Parallel
+let rechercheFichiersSecrets motclé répertoire =
+    let fichiersSecrets = Directory.GetFiles(répertoire, "*.secret")
+
+    // ('T -> unit) -> 'T [] -> unit
+    // décrypte les données
+    Array.Parallel.iter File.Decrypt fichiersSecrets
+
+    let donnéesSecrètes = fichiersSecrets 
+                          |> Array.Parallel.map (fun accèsFichier -> File.ReadAllText accèsFichier)
+                          |> Array.Parallel.choose (fun contenu ->
+                                    if contenu.Contains motclé then
+                                            Some contenu
+                                    else None)
+    // réencrypte les fichiers
+    Array.Parallel.iter File.Encrypt fichiersSecrets
+    // affiche le contenu des fichiers possédant le mot-clé désiré
+    donnéesSecrètes
