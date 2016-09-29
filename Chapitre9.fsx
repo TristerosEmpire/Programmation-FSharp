@@ -454,6 +454,8 @@ let redimensionneIMG (largeur:int, hauteur:int) (fichier:string) =
     let redim = new Bitmap(largeur,hauteur)
     use g = Graphics.FromImage(redim)
 
+    g.InterpolationMode <- InterpolationMode.HighQualityBicubic
+    g.DrawImage(redim, 0,0, largeur, hauteur)
     let nomFichier = Path.GetFileNameWithoutExtension(fichier) 
     let repertoire = Path.GetDirectoryName(fichier)
 
