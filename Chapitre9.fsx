@@ -472,3 +472,21 @@ let redimensionne repertoire = mesFichiersImagesJPG repertoire
 
 // remplacer XXX par le nom d'utilisateur
 Task.WaitAll(redimensionne "/home/XXX/Images")
+
+// annulations et la TPL
+let tacheLongueCTS = new CancellationTokenSource()
+
+let tacheLongue () =
+    let rec aux(i,loop) =
+        match (i, loop) with
+        | (x, true) 
+              when x <= 10 -> printfn "%d..." i
+                              Thread.Sleep(1000)
+                              if tacheLongueCTS.IsCancellationRequested then 
+                                aux ((i+1), false)
+                              else 
+                                aux ((i+1), true)
+        | (x, false)       -> printfn "Tâche annulée; arrêt prématuré."
+        | _                -> printfn "Tâche complétée."
+    aux(1, true)
+                
