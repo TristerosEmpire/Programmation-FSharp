@@ -476,7 +476,24 @@ Task.WaitAll(redimensionne "/home/XXX/Images")
 // annulations et la TPL
 let tacheLongueCTS = new CancellationTokenSource()
 
-let tacheLongue () =
+// code original de Smith pas franchement fonctionnel
+let longueTâche () = 
+    let mutable i = 1
+    let mutable loop = true
+
+    while i <= 10 && loop do
+        printfn "%d..." i
+        i <- i + 1
+        Thread.Sleep(1000)
+
+        // on vérifie si la tâche a été annulée
+        if tacheLongueCTS.IsCancellationRequested then
+            printfn "Tâche annulée ; arrêt prématuré"
+            loop <- false
+    printfn "Tache complétée."
+
+// version fonctionnelle du code original
+let longueTâcheF () =
     let rec aux(i,loop) =
         match (i, loop) with
         | (x, true) 
@@ -490,3 +507,77 @@ let tacheLongue () =
         | _                -> printfn "Tâche complétée."
     aux(1, true)
                 
+// test : longueTâcheF ()
+let alea = (new Random()).Next 20
+let lancementTaches () = Task.Factory.StartNew(longueTâcheF, tacheLongueCTS.Token)
+
+let t = lancementTaches ()
+
+if alea < 10 then
+    tacheLongueCTS.Cancel()
+
+// pour le REPL : pour retourner au prompt
+// pour retester le code : il faudra relancer TOUTES LES ETAPES dès let tacheLongueCTS = ...
+tacheLongueCTS.Cancel()
+
+// TPL et exceptions
+type Caverne =
+    | YetiDevoreHumain of string
+    | Crevasse
+    | Tresor
+    | SansIssue
+    | Croisement of Caverne * Caverne
+
+let rec trouveTousLesTrésors noeud =
+    match noeud with
+    | YetiDevoreHumain nom -> failwithf "Humain dévoré par le Yéti %s." nom
+    | Crevasse -> failwith "Humain tombé dans une profonde crevasse mortelle."
+    | SansIssue -> 0
+    | Tresor -> 1
+    | Croisement (gauche, droite) -> let aGauche = Task.Factory.StartNew<int>(
+                                                        fun () -> trouveTousLesTrésors gauche
+                                                )
+                                     let aDroite = Task.Factory.StartNew<int>(
+                                                        fun () -> trouveTousLesTrésors droite
+                                                )
+                                     aGauche.Result + aDroite.Result
+
+// test du code avec gestion des exceptions
+
+let carte = 
+    Croisement (
+        Croisement(
+            SansIssue,
+                Croisement (Tresor, Crevasse)
+        ),
+        Croisement(
+            YetiDevoreHumain "Umaro",
+            Croisement(
+                YetiDevoreHumain "Choko",
+                Tresor
+            )
+        )
+    )
+
+try 
+    let trouverTrésor =
+        Task.Factory.StartNew<int>(fun () -> trouveTousLesTrésors carte)
+    printfn "%d trésors trouvés." trouverTrésor.Result
+with
+| :? AggregateException as ae ->
+    // récupération de toutes les exceptions internes à AggregateException
+    let rec decompositionException (ae : AggregateException) =
+        seq {
+            for excInterne in ae.InnerExceptions do
+                match excInterne with
+                | :? AggregateException as ae -> yield! decompositionException ae
+                | _ -> yield excInterne
+        }
+    printfn "AggregateException : "
+    decompositionException ae |> Seq.iter (fun ex -> printfn "\nMessage: %s" ex.Message)
+(* 
+Résultat :
+AggregateException : 
+Message: Humain tombé dans une profonde crevasse mortelle.
+val it : unit = ()
+*)
