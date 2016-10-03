@@ -7,6 +7,7 @@ open System.Net
 open System.Drawing
 open System.Drawing.Imaging
 open System.Drawing.Drawing2D
+open System.Collections.Concurrent
 
 // THREADS
 // Création et lancement de threads
@@ -581,3 +582,19 @@ AggregateException :
 Message: Humain tombé dans une profonde crevasse mortelle.
 val it : unit = ()
 *)
+
+// Structures de données concurrentes
+// Queues
+
+let cq = new ConcurrentQueue<int>()
+[1 .. 10] |> List.iter cq.Enqueue
+
+let rec vidangeStructure (queue:ConcurrentQueue<int>) index =
+    let succes, item = queue.TryDequeue()
+    match succes with
+    | true -> printfn "Item %d a été retiré de la queue" item
+              vidangeStructure queue (index-1)
+    | false -> printfn "Retrait impossible. Essayer plus tard."
+
+// le dernier élément sera volontairement un false car cq.Count est toujours supérieur au dernier index de la queue
+vidangeStructure cq cq.Count
