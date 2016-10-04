@@ -596,5 +596,44 @@ let rec vidangeStructure (queue:ConcurrentQueue<int>) index =
               vidangeStructure queue (index-1)
     | false -> printfn "Retrait impossible. Essayer plus tard."
 
-// le dernier élément sera volontairement un false car cq.Count est toujours supérieur au dernier index de la queue
+// le dernier élément retournera volontairement un false car cq.Count est toujours supérieur au dernier index de la queue
 vidangeStructure cq cq.Count
+
+// Dictionnaire concurrent
+// exemple simple : lecture d'un fichier depuis le projet gutenberg
+// http://www.gutenberg.org/cache/epub/26812/pg26812.txt
+let flaubert = (new System.Net.WebClient()).DownloadString("http://www.gutenberg.org/cache/epub/26812/pg26812.txt")
+
+let cDictionnaire = new ConcurrentDictionary<string, int>()
+
+let comptageDeMots (fichier:string) = 
+    let texteDécomposé = fichier.Split(
+                            [|' '; '\r';'\n'|], 
+                            StringSplitOptions.RemoveEmptyEntries)
+                         |> Array.map (fun mot -> mot.Trim())
+    
+    // Ajout ou mise à jour du dictionnaire
+    Array.Parallel.iter(fun mot -> cDictionnaire.AddOrUpdate(
+                                        mot,
+                                        (fun _ -> 1),
+                                        (fun _ valeur -> valeur + 1)) 
+                                |> ignore
+                       ) texteDécomposé
+
+
+let test () =
+    comptageDeMots flaubert
+    printfn "Le dictionnaire se compose de %d valeurs." cDictionnaire.Count
+
+    let enum = cDictionnaire.GetEnumerator()
+    for i = 0 to 10 do
+        // on rejette le résultat du successeur
+        enum.MoveNext() |> ignore
+        let e:System.Collections.Generic.KeyValuePair<string, int> = enum.Current
+        let clé = e.Key
+        let valeur = e.Value
+        printfn "la valeur %A est présente %A fois" clé valeur
+    // on vide le dictionnaire à chaque fois
+    cDictionnaire.Clear()
+
+test ()
