@@ -620,7 +620,6 @@ let comptageDeMots (fichier:string) =
                                 |> ignore
                        ) texteDécomposé
 
-
 let test () =
     comptageDeMots flaubert
     printfn "Le dictionnaire se compose de %d valeurs." cDictionnaire.Count
@@ -629,7 +628,7 @@ let test () =
     for i = 0 to 10 do
         // on rejette le résultat du successeur
         enum.MoveNext() |> ignore
-        let e:System.Collections.Generic.KeyValuePair<string, int> = enum.Current
+        let (e:System.Collections.Generic.KeyValuePair<string, int>) = enum.Current
         let clé = e.Key
         let valeur = e.Value
         printfn "la valeur %A est présente %A fois" clé valeur
@@ -637,3 +636,35 @@ let test () =
     cDictionnaire.Clear()
 
 test ()
+
+// autre exemple d'après l'ouvrage de Smith
+let fichiersTxt = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.txt")
+                  |> (fun fichier -> new ConcurrentQueue<_>(fichier))
+
+// reprise du dictionnaire : cDictionnaire
+// reprise du code de la fonctions comptageDeMots
+    
+let remplissageDictionnaire () = 
+    let rec aux (queue:ConcurrentQueue<_>) =
+        let succes, fichier = queue.TryDequeue()
+        match succes with
+        | true -> comptageDeMots (File.ReadAllText(fichier))
+                  aux queue
+        | false when queue.IsEmpty -> ()
+        | false -> aux queue
+    aux fichiersTxt
+
+let test2 () =
+    remplissageDictionnaire ()
+    printfn "Le dictionnaire se compose de %d valeurs." cDictionnaire.Count
+    // itération sur un énumérateur
+    let enum = cDictionnaire.GetEnumerator()
+    for i = 0 to cDictionnaire.Count - 1 do
+        // on rejette le résultat du successeur
+        enum.MoveNext() |> ignore
+        let (e:System.Collections.Generic.KeyValuePair<string, int>) = enum.Current
+        let clé = e.Key
+        let valeur = e.Value
+        printfn "la valeur %A est présente %A fois" clé valeur
+
+test2 ()
