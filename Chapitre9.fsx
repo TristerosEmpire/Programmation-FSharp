@@ -8,6 +8,7 @@ open System.Drawing
 open System.Drawing.Imaging
 open System.Drawing.Drawing2D
 open System.Collections.Concurrent
+open System.Collections.Generic
 
 // THREADS
 // Création et lancement de threads
@@ -668,3 +669,30 @@ let test2 () =
         printfn "la valeur %A est présente %A fois" clé valeur
 
 test2 ()
+
+// concurrent bag (éq au HashSet cf. chap.4)
+let estPremier x = 
+    let rec verif i =
+        if i = x then true
+        elif x % i = 0 then false
+        else verif (i + 1)
+    // cas particulier : 1
+    if x = 1 then true
+    else verif 2
+
+let calculPremiers nbTâches valMax = 
+    let intervalle = valMax / nbTâches
+    let premiers = new ConcurrentBag<int>()
+
+    let tâches = [| for i in 0 .. nbTâches - 1 do
+                        yield Task.Factory.StartNew(
+                                    Action(fun () -> for x = 1 * intervalle to (i+1)*intervalle-1 do
+                                                            if estPremier x then
+                                                                    premiers.Add(x)
+                                    )
+                                   )
+                 |]
+    Task.WaitAll(tâches)
+    new HashSet<_>(premiers :> seq<int>)
+
+calculPremiers 4 100
