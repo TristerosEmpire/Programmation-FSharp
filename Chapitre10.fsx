@@ -1,0 +1,2 @@
+﻿// Scritping
+open System
