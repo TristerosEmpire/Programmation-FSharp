@@ -54,3 +54,35 @@ let rotationCouleurs =
 "Faire l'expérience d'un arc-en-ciel de possibilité !"
 |> Seq.zip rotationCouleurs
 |> Seq.iter (fun (couleur, caractere) -> colorisation couleur "%c" caractere) 
+
+//Production de son
+let victoire () = 
+    for frequence in [100 .. 50 .. 2000] do
+        Console.Beep(frequence, 25)
+
+let defaite () =
+    for frequence in [2000 .. 50 .. 37] do
+        Console.Beep(frequence, 25)
+
+// Parcours d'un répertoire pour en lister tous les fichiers sous la forme d'une séquence
+// listeDesFichiersSous : repertoire:string -> seq<string>
+let rec listeDesFichiersSous repertoire =
+    seq {
+        yield! Directory.GetFiles(repertoire)
+        for sousRepertoire in Directory.GetDirectories(repertoire) do
+            yield! listeDesFichiersSous sousRepertoire
+    }
+
+__SOURCE_DIRECTORY__ |> listeDesFichiersSous |> Seq.iter (fun fichier -> printfn "%A" fichier)
+
+__SOURCE_DIRECTORY__ |> listeDesFichiersSous
+                     |> Seq.filter (fun fichier -> fichier.ToUpper().EndsWith("FSX"))
+                     |> Seq.iter (fun fichier -> printfn "%A" fichier)
+
+let backupFSX repertoire repertoireBackup =
+    repertoire |> listeDesFichiersSous 
+               |> Seq.filter (fun fichier -> fichier.ToUpper().EndsWith("FSX"))
+               |> Seq.iter (fun fichier -> let nomFichier = Path.GetFileName(fichier)
+                                           let destination = Path.Combine(repertoireBackup, nomFichier)
+                                           File.Copy(fichier, destination)
+                                           printfn "%s a été copié ici : %s" nomFichier destination)
