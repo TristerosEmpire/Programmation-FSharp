@@ -86,3 +86,34 @@ let backupFSX repertoire repertoireBackup =
                                            let destination = Path.Combine(repertoireBackup, nomFichier)
                                            File.Copy(fichier, destination)
                                            printfn "%s a été copié ici : %s" nomFichier destination)
+
+// démarrage de processus
+open System.Text
+open System.Diagnostics
+
+let shellExecute pgm args =
+    let startInfo = new ProcessStartInfo()
+    startInfo.FileName <- pgm
+    startInfo.Arguments <- args
+
+    startInfo.UseShellExecute <- false
+    startInfo.RedirectStandardOutput <- true
+
+    let processus = new Process()
+    processus.EnableRaisingEvents <- true
+
+    // ajout d'un gestionnaire à l'événement OutputDataReceived
+    // ainsi on pourra enregistrer les flux de sortie du programme lancé
+    let sortie = new StringBuilder()
+    processus.OutputDataReceived.AddHandler(
+        (fun sender arguments -> sortie.AppendLine(arguments.Data) |> ignore)
+    ) 
+    processus.StartInfo <- startInfo
+    processus.Start() |> ignore
+    processus.BeginOutputReadLine()
+
+    processus.WaitForExit()
+    (processus.ExitCode, sortie.ToString())
+// signature : shellExecute : pgm:string -> args:string -> int * string
+
+// pas de présentation de code utilisant MS Office 
