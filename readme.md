@@ -12,4 +12,4 @@ Les différents codes sources présentés ici sont des reprises et des essais co
 - :ok: chapitre 8 (*Chapitre8.fsx*)
 - :ok: chapitre 9 (*Chapitre9.fsx*)
 - :ok: chapitre 10 (*Chapitre10.fsx*)
-- :warning: chapitre 11 (*en cours*)
+- :warning: chapitre 11 (*en cours* [Code source complet](https://github.com/achrissmith/Programming-FS-Examples/tree/master/Ch%2012%20-%20Data%20Processing) )
