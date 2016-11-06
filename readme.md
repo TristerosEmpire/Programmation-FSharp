@@ -13,4 +13,4 @@ Les différents codes sources présentés ici sont des reprises et des essais co
 - :ok: chapitre 9 (*Chapitre9.fsx*)
 - :ok: chapitre 10 (*Chapitre10.fsx*)
 - :warning: chapitre 11 (*aucun code source - cf:* [Code source complet](https://github.com/achrissmith/Programming-FS-Examples/tree/master/Ch%2012%20-%20Data%20Processing) )
-- :warning: chapitre 12 (*à venir*)
+- :warning: chapitre 12 (*en cours*)
