@@ -109,3 +109,82 @@ type1.Name
 
 let typePixelStack = typeof<PixelStack>
 typePixelStack.Name
+
+// accès aux types génériques
+let t1 = typeof<seq<'a>>
+let t2 = typedefof<seq<'a>>
+let t3 = typeof<seq<float>>
+
+// accès aux méthodes et propriétés d'un type
+let m = typeof<Moteur>.GetMethods()
+
+Array.ForEach( m ,(fun element -> printfn "%A" element))
+
+(*
+ on va créer une fonction qui prendra une instance d'un type 
+ et retournera une chaine comprenant les méthodes du type et ses propriétés.
+ Signature : descriptionDeType : element:'a -> unit
+*)
+
+let descriptionDeType (element:'a)  =
+    let e = element.GetType()
+
+    let methodes =
+        e.GetMethods() |> Array.fold (fun chaine methode -> chaine + sprintf "\n\t%s" methode.Name) ""
+
+    let proprietes =
+        e.GetProperties() |> Array.fold (fun chaine propriete -> chaine + sprintf "\n\t%s" propriete.Name) ""
+
+    let champs =
+        e.GetFields() |> Array.fold (fun chaine champs -> chaine + sprintf "\n\t%s" champs.Name) ""
+
+    printfn "Methodes :\n\t%s" methodes
+    printfn "\nPropriétés :\n\t%s" proprietes
+    printfn "\nChamps :\n\t%s" champs
+
+descriptionDeType moteur
+
+// version alternative : descriptionType' : element:Type -> unit 
+// le Type est obtenu avec la fonction typeof<_>
+
+let descriptionType' (element:Type) = 
+    let methodes =
+        element.GetMethods() |> Array.fold (fun chaine methode -> chaine + sprintf "\n\t%s" methode.Name) ""
+
+    let proprietes =
+        element.GetProperties() |> Array.fold (fun chaine propriete -> chaine + sprintf "\n\t%s" propriete.Name) ""
+
+    let champs =
+        element.GetFields() |> Array.fold (fun chaine champs -> chaine + sprintf "\n\t%s" champs.Name) ""
+
+    printfn "Methodes :\n\t%s" methodes
+    printfn "\nPropriétés :\n\t%s" proprietes
+    printfn "\nChamps :\n\t%s" champs
+
+descriptionType' typeof<Moteur>
+
+// version complète 
+let descriptionComplete (element : Type) =
+    let flags = 
+        BindingFlags.Public     ||| BindingFlags.NonPublic |||
+        BindingFlags.Instance   ||| BindingFlags.Static    |||
+        BindingFlags.DeclaredOnly
+
+    let methodes =
+        element.GetMethods(flags)
+        |> Array.fold (fun chaine methode -> chaine + sprintf " %s" methode.Name) ""
+    
+    let proprietes =
+        element.GetProperties(flags)
+        |> Array.fold (fun chaine prop -> chaine + sprintf " %s" prop.Name) ""
+
+    let champs = 
+        element.GetFields(flags)
+        |> Array.fold (fun chaine champs -> chaine + sprintf " %s" champs.Name) ""
+
+    printfn "Nom : %s" element.Name
+    printfn "Méthodes : \n\t%s\n" methodes
+    printfn "Propriétés : \n\t%s\n" proprietes
+    printfn "Champs : \n\t%s\n" champs
+
+descriptionComplete typeof<Moteur>
