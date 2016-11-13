@@ -16,4 +16,5 @@ Les différents codes sources présentés ici sont des reprises et des essais co
 - :warning: chapitre 12 (*en cours*)
 
 Supplément : .NET Core et F# 4.1
- - un répertoire a été créé spécialement : "core"
+ - "core" : premier exemple simple d'utilisation de .NET Core 1
+ - "core2" : second exemple simple intégrant une bibliothèque.
