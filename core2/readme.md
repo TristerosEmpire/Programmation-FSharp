@@ -39,3 +39,13 @@ Une fois les modifications effectuées, on passe à la compilation et à l'éxec
 ```bash
 dotnet run 1 2 3 4 5
 ```
+
+## Utilisation avec le REPL (fsharpi) :
+
+```fsharp
+#load "Bibliotheque.fs";;
+open FSI_OOXX.Essai.Bibliotheque;;
+decremente 3;;
+```
+
+FSI_OOXX où XX doit être remplacé par la valeur fournie par le REPL
