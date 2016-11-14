@@ -49,12 +49,12 @@ do ()
 
 // Définir ses propres atrributs
 /// On fournit une description pour une classe donnée
-type DescriptionClasseAttribute(description) = 
+type DescriptionClasseAttribute(description) =
     inherit System.Attribute()
     member this.Description = description
 
 /// On fournit une description pour une méthode donnée
-type DescriptionMethodeAttribute(desc) = 
+type DescriptionMethodeAttribute(desc) =
     inherit System.Attribute()
     member this.Description = desc
 
@@ -65,7 +65,7 @@ type Pixels =
      | Vert
      | Bleu
 
-/// On récrée une sorte de Stack<T> avec une List<T> 
+/// On récrée une sorte de Stack<T> avec une List<T>
 
 [<DescriptionClasse("Représente une pile de pixels")>]
 type PixelStack()=
@@ -86,7 +86,7 @@ type PixelStack()=
     member this.Count = listeDePixels.Count
 
 let liste = new PixelStack ()
-[Bleu; Vert; Rouge] |> Seq.iter (fun x -> liste.Push x ) 
+[Bleu; Vert; Rouge] |> Seq.iter (liste.Push)
 liste.First
 liste.Pop ()
 printfn "Nombre de pixels présents sur la pile : %A" liste.Count
@@ -121,7 +121,7 @@ let m = typeof<Moteur>.GetMethods()
 Array.ForEach( m ,(fun element -> printfn "%A" element))
 
 (*
- on va créer une fonction qui prendra une instance d'un type 
+ on va créer une fonction qui prendra une instance d'un type
  et retournera une chaine comprenant les méthodes du type et ses propriétés.
  Signature : descriptionDeType : element:'a -> unit
 *)
@@ -144,10 +144,10 @@ let descriptionDeType (element:'a)  =
 
 descriptionDeType moteur
 
-// version alternative : descriptionType' : element:Type -> unit 
+// version alternative : descriptionType' : element:Type -> unit
 // le Type est obtenu avec la fonction typeof<_>
 
-let descriptionType' (element:Type) = 
+let descriptionType' (element:Type) =
     let methodes =
         element.GetMethods() |> Array.fold (fun chaine methode -> chaine + sprintf "\n\t%s" methode.Name) ""
 
@@ -163,9 +163,9 @@ let descriptionType' (element:Type) =
 
 descriptionType' typeof<Moteur>
 
-// version complète 
+// version complète
 let descriptionComplete (element : Type) =
-    let flags = 
+    let flags =
         BindingFlags.Public     ||| BindingFlags.NonPublic |||
         BindingFlags.Instance   ||| BindingFlags.Static    |||
         BindingFlags.DeclaredOnly
@@ -173,12 +173,12 @@ let descriptionComplete (element : Type) =
     let methodes =
         element.GetMethods(flags)
         |> Array.fold (fun chaine methode -> chaine + sprintf " %s" methode.Name) ""
-    
+
     let proprietes =
         element.GetProperties(flags)
         |> Array.fold (fun chaine prop -> chaine + sprintf " %s" prop.Name) ""
 
-    let champs = 
+    let champs =
         element.GetFields(flags)
         |> Array.fold (fun chaine champs -> chaine + sprintf " %s" champs.Name) ""
 
