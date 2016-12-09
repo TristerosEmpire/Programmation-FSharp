@@ -22,9 +22,7 @@ type NiveauSécurité =
     | Rouge of string
 
 type NiveauDeDangerActuel(niveauDeSécurité: NiveauSécurité) =
-
     let niveau = ref niveauDeSécurité
-
     member this.NiveauSécurité with get () = !niveau
 
     // pour éviter l'erreur avec Ionide :
@@ -32,20 +30,9 @@ type NiveauDeDangerActuel(niveauDeSécurité: NiveauSécurité) =
     // sinon avec MonoDevelop :
     //[<Obsolete("Dépréciée. Le niveau de sécurité ne peut pas être modifié une fois initialisé.", true)>]
     member this.NiveauSécurité with set x = niveau := x
-
-
 let danger = new NiveauDeDangerActuel(Vert "Ok")
 danger.NiveauSécurité = Orange "Danger imminent"
 printfn "%A" danger.NiveauSécurité
-
-// attributs-cibles
-// niveau assembly
-[<
-    assembly:AssemblyDescription("Hello.exe");
-    assembly:AssemblyCompany("NoCompany Corp.");
-    assembly:AssemblyCopyright("Public Domain - no \169");
->]
-do ()
 
 // Définir ses propres atrributs
 /// On fournit une description pour une classe donnée
@@ -188,3 +175,34 @@ let descriptionComplete (element : Type) =
     printfn "Champs : \n\t%s\n" champs
 
 descriptionComplete typeof<Moteur>
+
+// Inspection des attributs : reprise du type Pixels et de PixelStack
+// ATTENTION REPL : 
+//bien avoir en "mémoire" les classes attributs DescriptionClasseAttribute et DescriptionMethodeAttribute 
+let printDocumentation (t:Type) =
+    let objPossedeType t o = (o.GetType() = t)
+
+    let descriptionClasse : string option =
+        t.GetCustomAttributes(false)
+        |> Seq.tryFind (objPossedeType typeof<DescriptionClasseAttribute>)
+        |> Option.map (fun attr -> (attr :?> DescriptionClasseAttribute))
+        |> Option.map (fun dca -> dca.Description)
+
+    let descriptionMethode : seq<string * string option> = 
+        t.GetMethods()
+        |> Seq.map (fun mi -> mi, mi.GetCustomAttributes(false))
+        |> Seq.map (fun (infoMethode, attrMethode) -> 
+            let attributsDeMethode =
+                attrMethode |> Seq.tryFind(objPossedeType typeof<DescriptionMethodeAttribute>)
+                            |> Option.map (fun attr -> (attr :?> DescriptionMethodeAttribute))
+                            |> Option.map (fun dma -> dma.Description)
+            infoMethode.Name, attributsDeMethode)
+    let getDescription = function
+        | Some d -> d
+        | None   -> "Aucune descrption fournie."
+    printfn "Info pour la classe %s" t.Name
+    printfn "Description de classe : \n\t%s" (getDescription descriptionClasse)
+    printfn "Description des méthodes:"
+    descriptionMethode |> Seq.iter (fun (methodeNom, desc) -> printfn "\t%15s - %s" methodeNom (getDescription desc))
+
+printDocumentation typeof<PixelStack>
