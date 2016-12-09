@@ -1,11 +1,12 @@
-﻿// Learn more about F# at http://fsharp.org
 namespace Essai
+
 open System
+open Bibliotheque
 
 module Programmes =
     [<EntryPoint>]
     let main argv =
         printfn "Premier programme avec utilisation d'une bibliothèque."
-        argv |> Array.map (int >> Array.map Bibliotheque.decremente)
+        argv |> Array.map (int >> decremente)
              |> Array.iter (printfn "%i")
-        0 // return an integer exit code
+        0 // code retour
