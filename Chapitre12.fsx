@@ -206,3 +206,36 @@ let printDocumentation (t:Type) =
     descriptionMethode |> Seq.iter (fun (methodeNom, desc) -> printfn "\t%15s - %s" methodeNom (getDescription desc))
 
 printDocumentation typeof<PixelStack>
+
+// Réflexion et types F#
+
+type Suite = 
+    | Coeur
+    | Carreau
+    | Trefle
+    | Pique
+type JeuDeCarte =
+    | As of Suite
+    | Roi of Suite
+    | Reine of Suite
+    | Valet of Suite
+    | ValeurCarte of int * Suite
+    | Joker
+
+descriptionComplete typeof<JeuDeCarte>
+
+// ... avec les tuples
+let xenon = ("Xe", 54)
+open Microsoft.FSharp.Reflection
+let elementsUplet = FSharpType.GetTupleElements(xenon.GetType())
+
+// ... avec les unions discriminées
+FSharpType.GetUnionCases typeof<JeuDeCarte> |> Array.iter (fun x -> printfn "%s" x.Name)
+
+// ... avec les enregistrements
+[<Measure>]
+type cel // degré Celsius
+type Observation = Ensoleille | Nuageux | Pluvieux
+type Meteo = { Observation: Observation; Haute: float<cel>; Bas: float<cel>}
+FSharpType.GetRecordFields typeof<Meteo> 
+    |> Array.iter (fun x -> printfn "%A [%s] : %s" x.MemberType x.PropertyType.Name x.Name)
