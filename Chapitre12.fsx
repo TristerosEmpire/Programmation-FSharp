@@ -2,6 +2,7 @@
 open System
 open System.Reflection
 open System.Collections.Generic
+open System.IO
 
 // exemple simple
 
@@ -239,3 +240,32 @@ type Observation = Ensoleille | Nuageux | Pluvieux
 type Meteo = { Observation: Observation; Haute: float<cel>; Bas: float<cel>}
 FSharpType.GetRecordFields typeof<Meteo> 
     |> Array.iter (fun x -> printfn "%A [%s] : %s" x.MemberType x.PropertyType.Name x.Name)
+
+
+// Instanciation dynamique
+
+//// instanciation dynamique de types
+type WriterPoli(flux:TextWriter) =
+    member this.EcritureLigne(msg:string)=
+        sprintf("%s... et bonne journée.") msg |> flux.WriteLine
+
+let consolePolie = Activator.CreateInstance(typeof<WriterPoli>, [|box Console.Out|])
+(consolePolie :?> WriterPoli).EcritureLigne("Salut !")
+
+//// Invocation dynamique
+type Livre(titre:string, auteur:string) =
+
+    let mutable (m_pageActuelle:int option) = None
+    member this.Auteur = auteur
+    member this.Titre = titre
+    member this.PageActuelle with get () = m_pageActuelle
+                             and set x = m_pageActuelle <- x
+    override this.ToString () = 
+        match m_pageActuelle with
+        | Some(x) -> sprintf "%s de %s ouvert à la page %d" titre auteur x
+        | None    -> sprintf "%s de %s n'est pas encore ouvert." titre auteur
+
+let lectureDuSoir = new Livre("Ulysse", "James Joyce")
+let pageEnCoursInfo = typeof<Livre>.GetProperty("PageActuelle")
+pageEnCoursInfo.SetValue(lectureDuSoir, Some(123), [||])
+lectureDuSoir.ToString()
