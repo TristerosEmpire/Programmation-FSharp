@@ -269,3 +269,30 @@ let lectureDuSoir = new Livre("Ulysse", "James Joyce")
 let pageEnCoursInfo = typeof<Livre>.GetProperty("PageActuelle")
 pageEnCoursInfo.SetValue(lectureDuSoir, Some(123), [||])
 lectureDuSoir.ToString()
+
+//// Opérateurs "point d'interrogation"
+let (?) (chose:obj) (propriete:string) =
+    match chose.GetType().GetProperty(propriete) with
+    | null -> false
+    | _    -> true
+
+// on teste :
+"une chaine" ? Length
+42 ? IsPrime
+("une chaine castée en objet" :> obj) ? Length
+lectureDuSoir ? Auteur
+
+// récupération dynamique de la valeur d'une propriété 
+let (?) (chose:obj) (propriete:string) :'a =
+    let propInfo = chose.GetType().GetProperty(propriete)
+    propInfo.GetValue(chose, null) :?> 'a
+//important : bien indiquer le type de la valeur de retour (ici int)
+let verif : int = "lectureDuSoir" ? Length
+
+// établir une valeur dynamiquement pour une propriété
+let (?<-) (chose:obj) (propriete :string) (nvValeur: 'a) =
+    let propInfo = chose.GetType().GetProperty(propriete)
+    propInfo.SetValue(chose, nvValeur, null)
+
+lectureDuSoir ? PageActuelle <- Some 345
+let v : int option = lectureDuSoir?PageActuelle
