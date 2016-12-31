@@ -296,3 +296,126 @@ let (?<-) (chose:obj) (propriete :string) (nvValeur: 'a) =
 
 lectureDuSoir ? PageActuelle <- Some 345
 let v : int option = lectureDuSoir?PageActuelle
+
+// REFLEXION : UTILISATION
+//// Réflexion et programmation déclarative
+[<Measure>]
+type kg
+
+[<Measure>]
+type cm
+
+type Conteneur = Enveloppe | Carton | Caisse
+
+type Dimensions = { 
+    Hauteur : float<cm>;
+    Largeur : float<cm>;
+    Profondeur : float<cm>
+}
+
+[<AbstractClass>]
+type ExpeditionItem() =
+    abstract Poids : float<kg>
+    abstract Dimension : Dimensions
+
+(*
+    Le code qui suit n'est pas déclaratif : il sera difficilement maintenable
+*)   
+
+type Courrier() = 
+    inherit ExpeditionItem()
+    override this.Poids = 0.02<kg>
+    override this.Dimension = {
+        Hauteur = 21.0<cm>
+        Largeur = 29.7<cm>
+        Profondeur = 0.001<cm>
+    }
+
+type Blender() = 
+    inherit ExpeditionItem()
+    override this.Poids = 5.0<kg>
+    override this.Dimension = {
+        Hauteur = 30.0<cm>
+        Largeur = 20.0<cm>
+        Profondeur = 20.0<cm>
+    }
+
+let (|PlusGrandQue|_|) (valeurLimite:float<'a>) valeurEntree =
+    if valeurLimite > valeurEntree then Some () else None
+
+let determineTypeColis (item:ExpeditionItem) =
+    match item.Poids, item.Dimension with
+    // cas pour l'expédition en caisse
+    | PlusGrandQue 40.0<kg>, _ -> Caisse
+    | _, {Hauteur=PlusGrandQue 60.0<cm>; Largeur=_; Profondeur=_}
+    | _, {Hauteur=_; Largeur=PlusGrandQue 60.0<cm>; Profondeur=_}
+    | _, {Hauteur=_; Largeur=_; Profondeur=PlusGrandQue 60.0<cm>}
+        -> Caisse
+    // cas pour l'expédition en boite de carton
+    | PlusGrandQue 2.0<kg>, _ -> Carton
+    | _, {Hauteur=PlusGrandQue 25.0<cm>; Largeur=_; Profondeur=_}
+    | _, {Hauteur=_; Largeur=PlusGrandQue 25.0<cm>; Profondeur=_}
+    | _, {Hauteur=_; Largeur=_; Profondeur=PlusGrandQue 25.0<cm>}
+        -> Carton
+    // cas courrier simple
+    | _ -> Enveloppe
+
+(*
+    Solution permettant une évolutivité du code plus simple     
+*)
+
+type FragileAttribute() = inherit System.Attribute()
+
+type InflammableAttribute() = inherit System.Attribute() 
+
+type AnimalVivantAttribute() = inherit System.Attribute()
+
+// on crée des items particuliers
+[<Fragile; AnimalVivant>]
+type Wombat() =
+    inherit ExpeditionItem()
+    override this.Poids = 25.0<kg>
+    override this.Dimension = {
+        Hauteur = 30.0<cm>
+        Largeur = 25.0<cm>
+        Profondeur = 60.0<cm>        
+    }
+
+[<Inflammable>]
+type FeuArtifice() =
+    inherit ExpeditionItem()
+    override this.Poids = 5.0<kg>
+    override this.Dimension = {
+        Hauteur = 20.0<cm>
+        Largeur = 25.0<cm>
+        Profondeur = 40.0<cm>        
+    }
+
+type BesoinsPourExpedition = 
+    | Assurance of ExpeditionItem
+    | Signature of ExpeditionItem
+    | PapierBulle of ExpeditionItem
+
+let getBesoinsPourExpedition (contenus : ExpeditionItem list) =
+
+    let possedeAttribut (cible: Type) x =
+        x.GetType().GetCustomAttributes(false)
+        |> Array.tryFind(fun attr -> attr.GetType() = cible)
+        |> Option.isSome
+
+    let itemsAvecAttribut attr =
+        contenus |> List.filter(possedeAttribut attr)
+
+    let besoins = new HashSet<BesoinsPourExpedition>()
+
+    // pour les items avec attribut Fragile
+    itemsAvecAttribut typeof<FragileAttribute>
+    |> List.iter (fun item -> besoins.Add(PapierBulle( item)) |> ignore)
+
+    itemsAvecAttribut typeof<InflammableAttribute>
+    |> List.iter (fun item -> besoins.Add(Assurance( item)) |> ignore)
+
+    itemsAvecAttribut typeof<AnimalVivantAttribute>
+    |> List.iter (fun item -> besoins.Add(Signature( item)) |> ignore)
+
+    Seq.toList besoins
