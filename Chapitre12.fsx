@@ -31,7 +31,7 @@ type NiveauDeDangerActuel(niveauDeSécurité: NiveauSécurité) =
     // sinon avec MonoDevelop :
     //[<Obsolete("Dépréciée. Le niveau de sécurité ne peut pas être modifié une fois initialisé.", true)>]
     member this.NiveauSécurité with set x = niveau := x
-let danger = new NiveauDeDangerActuel(Vert "Ok")
+let danger = NiveauDeDangerActuel(Vert "Ok")
 danger.NiveauSécurité = Orange "Danger imminent"
 printfn "%A" danger.NiveauSécurité
 
@@ -73,7 +73,7 @@ type PixelStack()=
     [<DescriptionMethode("Comptage du nombre d'éléments dans la liste")>]
     member this.Count = listeDePixels.Count
 
-let liste = new PixelStack ()
+let liste = PixelStack()
 [Bleu; Vert; Rouge] |> Seq.iter (liste.Push)
 liste.First
 liste.Pop ()
@@ -89,7 +89,7 @@ type Moteur() =
     member this.NumeroDeSerie = "JWM-0123"
 
 let type1 = typeof<Moteur>
-let moteur = new Moteur()
+let moteur = Moteur()
 let type2 = moteur.GetType()
 
 type1 = type2
@@ -198,6 +198,7 @@ let printDocumentation (t:Type) =
                             |> Option.map (fun attr -> (attr :?> DescriptionMethodeAttribute))
                             |> Option.map (fun dma -> dma.Description)
             infoMethode.Name, attributsDeMethode)
+
     let getDescription = function
         | Some d -> d
         | None   -> "Aucune descrption fournie."
@@ -410,12 +411,52 @@ let getBesoinsPourExpedition (contenus : ExpeditionItem list) =
 
     // pour les items avec attribut Fragile
     itemsAvecAttribut typeof<FragileAttribute>
-    |> List.iter (fun item -> besoins.Add(PapierBulle( item)) |> ignore)
+    |> List.iter (fun item -> besoins.Add(PapierBulle(item)) |> ignore)
 
     itemsAvecAttribut typeof<InflammableAttribute>
-    |> List.iter (fun item -> besoins.Add(Assurance( item)) |> ignore)
+    |> List.iter (fun item -> besoins.Add(Assurance(item)) |> ignore)
 
     itemsAvecAttribut typeof<AnimalVivantAttribute>
-    |> List.iter (fun item -> besoins.Add(Signature( item)) |> ignore)
+    |> List.iter (fun item -> besoins.Add(Signature(item)) |> ignore)
 
     Seq.toList besoins
+
+// Architecture en plugin
+//// interfacer des plugins
+//// cf. SystemeLivraison.fs pour la création d'une interface de plugin (génération d'une DLL)
+//// DLL a pour nom SystemeLivraison.Core.dll
+//// dans un 2nd temps, on définir une nouvelle assembly référençant notre DLL 
+//// cf. PigeonVoyageurPlugin.fs
+//// La DLL a pour nom PigeonVoyageurPlugin.dll
+
+//// Avant d'aller plus loin comment on charge des assemblies
+let loadASM (nom:string) = Assembly.Load(nom)
+////affichage des infos à la console
+let printASMInfo nom =
+    let asm = loadASM nom
+    printfn "L'assembly %s dispose de %d types" nom (asm.GetTypes().Length)
+// On teste avec différentes ASM
+["SystemeLivraison.Core";"PigeonVoyageurPlugin";"System";"FSharp.Core"] |> List.iter printASMInfo
+
+//// Pour charger des plugins :
+#r "SystemeLivraison.Core.dll"
+open Livraison.Core
+
+let loadPlugins() =
+    // retourne true si un type implémente une interface demandée
+    let typeImplementeInterface (interfaceDemandee: Type) (typeDemande: Type) =
+        printfn "Vérification de  %s" typeDemande.Name
+        match typeDemande.GetInterface(interfaceDemandee.Name) with
+        | null -> false
+        | _ -> true
+
+    Directory.GetFiles(Environment.CurrentDirectory, "*.dll")
+    |> Array.map (fun fichier -> Assembly.LoadFile(fichier))
+    |> Array.collect (fun asm -> asm.GetTypes())
+    // on filtre seulement les DLL intégrant IMethodeLivraison
+    |> Array.filter (typeImplementeInterface typeof<IMethodeLivraison>)
+    // instanciation de chaque pugin
+    |> Array.map (fun plugin-> Activator.CreateInstance(plugin))
+    |> Array.map (fun plugin -> plugin :?> IMethodeLivraison)
+
+loadPlugins() |> Array.iter (fun pi -> printfn "Plugin charge - %s" pi.NomMethode)
