@@ -14,7 +14,7 @@ Les différents codes sources présentés ici sont des reprises et des essais co
 - :ok: chapitre 10 (*Chapitre10.fsx*)
 - :warning: chapitre 11 (*aucun code source - cf:* [Code source complet](https://github.com/achrissmith/Programming-FS-Examples/tree/master/Ch%2012%20-%20Data%20Processing) )
 - :ok: chapitre 12 (*Chapitre12.fsx, PigeonVoyageurPlugin.fs et SystemeLivraison.Core.dll*)
-- :warning: chapitre 13 (*prochainement*)
+- :warning: chapitre 13 (*en cours*)
 
 Supplément : .NET Core et F# 4.1
  - "core" : premier exemple simple d'utilisation de .NET Core 1
