@@ -61,3 +61,29 @@ let totalResistance2 r1 r2 r3 =
                                         (fun val3 -> divise (val1+val2+val3))
                         )
     )
+
+// Utilisation des constructeurs d'expression 
+// qui effectue la même chose que précédemment
+// mais en utilisant un sucre syntaxique
+
+type Constructeur() =
+    member this.Bind((x:Resultat<float>), (division : float -> Resultat<float>) ) =
+        match x with
+        | Succes(x) -> division x
+        | _ -> DivisionParZero
+    
+    member this.Return (x:'a) = x
+
+let constructeur = Constructeur()
+
+let totalResistance3 r1 r2 r3 =
+    constructeur {
+        let! x = divise r1
+        let! y = divise r2
+        let! z = divise r3
+        return divise (x+y+z)
+    }
+
+totalResistance 0.75 0.3 0.4
+totalResistance2 0.75 0.3 0.4
+totalResistance3 0.75 0.3 0.4
