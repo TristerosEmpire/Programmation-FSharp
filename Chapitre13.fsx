@@ -1,4 +1,5 @@
 open System
+open System.IO
 
 // séquences et expressions :
 let joursAnnee = 
@@ -87,3 +88,44 @@ let totalResistance3 r1 r2 r3 =
 totalResistance 0.75 0.3 0.4
 totalResistance2 0.75 0.3 0.4
 totalResistance3 0.75 0.3 0.4
+
+// exemple de constructeur/Builder avec la programmation asynchrone
+// PGM asynchrone : chapitre 9
+let traitementFichierAsync (fichier: string) (traitementOct: byte[] -> byte[]) =
+    async {
+        printfn "fichier en traitement [%s]" (Path.GetFileName(fichier))
+        let streamFichier = new FileStream(fichier, FileMode.Open)
+        let octetsALire = int streamFichier.Length
+
+        let! donnees = streamFichier.AsyncRead(octetsALire);
+        printfn "[%s] ouvert, lecture : [%d] octets" (Path.GetFileName(fichier)) donnees.Length
+        let donnees' = traitementOct donnees
+        let fichierFinal = new FileStream(fichier+".rslt", FileMode.Create)
+
+        do! fichierFinal.AsyncWrite(donnees', 0, donnees'.Length)
+
+        printfn "Fichier finalisé [%s]" <| Path.GetFileName(fichier)
+    } |> Async.Start
+
+// Autre exemple : workflow de précision mathématique
+
+type PrecisionArithmetique(chiffresRetenus: int) =
+    let arrondi(x: float) = Math.Round(x, chiffresRetenus)
+
+    member this.Bind((valeur: float), (fctDeCalcul: float-> float)) =
+        let rslt = arrondi valeur
+        fctDeCalcul rslt
+    
+    member this.Return(valeur: float) = arrondi valeur
+
+let precision x = PrecisionArithmetique(x)
+
+let test = 
+    precision 3 {
+        let! x = 2.0/12.0
+        // ne pas utiliser %f pour le formatage
+        printfn "x vaut %A" x
+        let! y = 3.5
+        printfn "y vaut %A" y
+        return (x/y)
+    }
