@@ -129,3 +129,69 @@ let test =
         printfn "y vaut %A" y
         return (x/y)
     }
+
+// https://docs.microsoft.com/en-us/dotnet/articles/fsharp/language-reference/computation-expressions
+
+// Monade State
+
+type FonctionEtat<'etat, 'resultat> = FonctionEtat of ('etat -> 'resultat * 'etat)
+
+let run (FonctionEtat fonction) etatInitial = fonction etatInitial
+
+type EtatBuilder() =
+
+    member this.Bind(
+                    rslt : FonctionEtat<'etat, 'a>,
+                    resteTraitement : 'a -> FonctionEtat<'etat, 'b>
+                    ) =
+            FonctionEtat (fun initial ->
+                                let rslt, update = run rslt initial
+                                rslt, update
+                                )
+
+    member this.Combine(
+                        partieUne : FonctionEtat<'etat, unit>, 
+                        partieDeux : FonctionEtat<'etat, 'a>
+                        ) = 
+        FonctionEtat (fun initial -> 
+                            let (), update = run partieUne initial
+                            run partieDeux update
+                     )
+
+    member this.Delay(
+                        resteTraitement : unit -> FonctionEtat<'etat, 'a>
+                     )=
+        FonctionEtat (fun initial -> run (resteTraitement ()) initial) 
+
+    member this.For(
+                        elements : seq<'a>,
+                        corpsFor : ('a -> FonctionEtat<'etat, unit>)
+                   )=
+        FonctionEtat (fun initial ->
+                        let etat = ref initial
+                        for e in elements do
+                            let (), update = run (corpsFor e) (!etat)
+                            etat := update
+                        (), !etat
+                    )
+
+    member this.Return(x:'a) = 
+        FonctionEtat (
+            fun initial -> x, initial
+        )
+
+    member this.Using<'a, 'etat, 'b when 'a :> IDisposable>
+                    (
+                        x: 'a,
+                        resteTraitement : 'a -> FonctionEtat<'etat, 'b>
+                    ) =
+                        FonctionEtat (fun initial ->
+                                            try
+                                                run (resteTraitement x) initial
+                                            finally
+                                                x.Dispose()
+                                     )
+
+
+// Pour une meilleure présentation :
+// http://fsharpforfunandprofit.com/posts/computation-expressions-intro/
