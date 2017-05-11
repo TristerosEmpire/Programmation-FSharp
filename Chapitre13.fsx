@@ -139,14 +139,13 @@ type FonctionEtat<'etat, 'resultat> = FonctionEtat of ('etat -> 'resultat * 'eta
 let run (FonctionEtat fonction) etatInitial = fonction etatInitial
 
 type EtatBuilder() =
-
     member this.Bind(
                     rslt : FonctionEtat<'etat, 'a>,
                     resteTraitement : 'a -> FonctionEtat<'etat, 'b>
                     ) =
             FonctionEtat (fun initial ->
                                 let rslt, update = run rslt initial
-                                rslt, update
+                                run (resteTraitement rslt) update
                                 )
 
     member this.Combine(
@@ -228,6 +227,50 @@ let etat = EtatBuilder()
 
 let getEtat = FonctionEtat (fun etat -> etat, etat)
 let setEtat nvEtat = FonctionEtat (fun ancienEtat -> (), nvEtat)
+
+let Ajouter x =
+    etat {
+        let! totalActuel, histoire = getEtat
+        do! setEtat (totalActuel + x, (sprintf "%d ajouté" x) :: histoire)
+    }
+
+let Soustraire x = 
+    etat {
+        let! totalActuel, histoire = getEtat
+        do! setEtat (totalActuel - x, (sprintf "%d soustrait" x) :: histoire)
+    }
+
+let Multiplier x = 
+    etat {
+        let! totalActuel, histoire = getEtat
+        do! setEtat (totalActuel * x, (sprintf "%d multiplié" x) :: histoire)
+    }
+
+let Diviser x = 
+    etat {
+        let! totalActuel, histoire = getEtat
+        do! setEtat (totalActuel / x, (sprintf "%d multiplié" x) :: histoire)
+    }
+
+let calcul =
+    etat{
+        do! Ajouter 2 
+        do! Multiplier 10 
+        do! Diviser 5 
+        do! Soustraire 8 
+
+        return "Fini"
+    }
+
+let resultat, etatFinal = run calcul (0, [])
+(*
+    Résultat affiché :
+
+    val resultat : string = "Fini"
+    val etatFinal : int * string list =
+        (-4, ["8 soustrait"; "5 multiplié"; "10 multiplié"; "2 ajouté"])
+
+*)
 
 // Pour une meilleure présentation :
 // http://fsharpforfunandprofit.com/posts/computation-expressions-intro/
