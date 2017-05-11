@@ -192,6 +192,42 @@ type EtatBuilder() =
                                                 x.Dispose()
                                      )
 
+    member this.TryFinally(blocTry : FonctionEtat<'etat, 'a>, 
+                           blocFinally : unit -> unit) =
+            FonctionEtat (fun initial ->
+                                try
+                                    run blocTry initial
+                                finally
+                                    blocFinally ()
+            )
+
+    member this.TryWith(blocTry : FonctionEtat<'etat, 'a>, 
+                        gestionException : exn -> FonctionEtat<'etat, 'a>) =
+                        FonctionEtat (fun initial ->
+                                        try
+                                            run blocTry initial
+                                        with
+                                        | e -> run (gestionException e) initial
+                        )
+
+    member this.While(predicat : unit -> bool, 
+                      corps : FonctionEtat<'etat, unit>)=
+                      FonctionEtat (fun initial ->
+                                        let etat = ref initial
+                                        while (predicat ()) do
+                                            let (), update = run corps (!etat)
+                                            etat := update
+                                        (), !etat)
+
+    member this.Zero() =  FonctionEtat (fun initial -> (), initial)
+
+// création d'une instance de notre Builder
+let etat = EtatBuilder()
+
+//on crée des fonctions de type accesseur/mutateur
+
+let getEtat = FonctionEtat (fun etat -> etat, etat)
+let setEtat nvEtat = FonctionEtat (fun ancienEtat -> (), nvEtat)
 
 // Pour une meilleure présentation :
 // http://fsharpforfunandprofit.com/posts/computation-expressions-intro/
