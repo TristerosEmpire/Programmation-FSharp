@@ -249,7 +249,7 @@ let Multiplier x =
 let Diviser x = 
     etat {
         let! totalActuel, histoire = getEtat
-        do! setEtat (totalActuel / x, (sprintf "%d multiplié" x) :: histoire)
+        do! setEtat (totalActuel / x, (sprintf "%d divisé " x) :: histoire)
     }
 
 let calcul =
